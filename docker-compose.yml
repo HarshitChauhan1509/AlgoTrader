@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: stock-platform-postgres
+    environment:
+      POSTGRES_DB: stock_platform
+      POSTGRES_USER: stock_platform
+      POSTGRES_PASSWORD: stock_platform_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stock_platform -d stock_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: stock-platform-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+  redis-data:
+

@@ -1,0 +1,360 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TradingMode {
+  SIGNAL_ONLY
+  PAPER_TRADING
+  MANUAL_EXECUTION
+  AUTO_EXECUTION
+}
+
+enum StrategyAction {
+  BUY
+  SELL
+}
+
+enum SignalDirection {
+  BUY
+  SELL
+}
+
+enum OrderStatus {
+  CREATED
+  PENDING
+  SUBMITTED
+  OPEN
+  PARTIALLY_FILLED
+  FILLED
+  CANCELLED
+  REJECTED
+  EXPIRED
+  FAILED
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+}
+
+model User {
+  id                 String              @id @default(uuid()) @db.Uuid
+  email              String              @unique
+  name               String?
+  passwordHash       String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  sessions           Session[]
+  brokerAccounts     BrokerAccount[]
+  watchlists         Watchlist[]
+  strategies         Strategy[]
+  signals            Signal[]
+  orders             Order[]
+  positions          Position[]
+  trades             Trade[]
+  portfolioSnapshots PortfolioSnapshot[]
+  riskConfiguration  RiskConfiguration?
+  notifications      Notification[]
+  backtests          Backtest[]
+  auditLogs          AuditLog[]
+}
+
+model Session {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @db.Uuid
+  refreshTokenHash String
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model BrokerAccount {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  broker      String
+  displayName String
+  encryptedCredentials Json?
+  connectedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@unique([userId, broker])
+}
+
+model Watchlist {
+  id        String          @id @default(uuid()) @db.Uuid
+  userId    String          @db.Uuid
+  name      String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WatchlistItem[]
+
+  @@index([userId])
+  @@unique([userId, name])
+}
+
+model WatchlistItem {
+  id          String    @id @default(uuid()) @db.Uuid
+  watchlistId String    @db.Uuid
+  symbol      String
+  exchange    String    @default("NSE")
+  createdAt   DateTime  @default(now())
+  watchlist   Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+
+  @@unique([watchlistId, exchange, symbol])
+}
+
+model Strategy {
+  id             String          @id @default(uuid()) @db.Uuid
+  userId         String          @db.Uuid
+  name           String
+  description    String?
+  timeframe      String
+  action         StrategyAction
+  definition     Json
+  enabled        Boolean         @default(false)
+  tradingMode    TradingMode     @default(SIGNAL_ONLY)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conditions     StrategyCondition[]
+  runs           StrategyRun[]
+  patternMatches PatternMatch[]
+  signals        Signal[]
+  backtests      Backtest[]
+
+  @@index([userId, enabled])
+}
+
+model StrategyCondition {
+  id         String   @id @default(uuid()) @db.Uuid
+  strategyId String   @db.Uuid
+  sortOrder  Int
+  groupPath  String?
+  definition Json
+  createdAt  DateTime @default(now())
+  strategy   Strategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+
+  @@index([strategyId, sortOrder])
+}
+
+model StrategyRun {
+  id         String   @id @default(uuid()) @db.Uuid
+  strategyId String   @db.Uuid
+  symbol     String
+  timeframe  String
+  startedAt  DateTime @default(now())
+  stoppedAt  DateTime?
+  status     String
+  strategy   Strategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+
+  @@index([strategyId, startedAt])
+  @@index([symbol, timeframe])
+}
+
+model PatternMatch {
+  id          String   @id @default(uuid()) @db.Uuid
+  strategyId  String   @db.Uuid
+  symbol      String
+  timeframe   String
+  matched     Boolean
+  explanation Json
+  evaluatedAt DateTime @default(now())
+  strategy    Strategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+  signal      Signal?
+
+  @@index([strategyId, evaluatedAt])
+  @@index([symbol, timeframe, evaluatedAt])
+}
+
+model Signal {
+  id             String          @id @default(uuid()) @db.Uuid
+  userId         String          @db.Uuid
+  strategyId     String          @db.Uuid
+  patternMatchId String?         @unique @db.Uuid
+  symbol         String
+  direction      SignalDirection
+  price          Decimal         @db.Decimal(18, 4)
+  reason         String
+  stopLoss       Decimal?        @db.Decimal(18, 4)
+  target         Decimal?        @db.Decimal(18, 4)
+  idempotencyKey String          @unique
+  createdAt      DateTime        @default(now())
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  strategy       Strategy        @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+  patternMatch   PatternMatch?   @relation(fields: [patternMatchId], references: [id], onDelete: SetNull)
+  orders         Order[]
+
+  @@index([userId, createdAt])
+  @@index([symbol, createdAt])
+}
+
+model Order {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @db.Uuid
+  signalId       String?      @db.Uuid
+  symbol         String
+  side           SignalDirection
+  quantity       Int
+  status         OrderStatus  @default(CREATED)
+  idempotencyKey String       @unique
+  brokerOrderId  String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  signal         Signal?      @relation(fields: [signalId], references: [id], onDelete: SetNull)
+  events         OrderEvent[]
+  trades         Trade[]
+
+  @@index([userId, createdAt])
+  @@index([symbol, status])
+}
+
+model OrderEvent {
+  id        String      @id @default(uuid()) @db.Uuid
+  orderId   String      @db.Uuid
+  status    OrderStatus
+  message   String?
+  payload   Json?
+  createdAt DateTime    @default(now())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+model Position {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  symbol       String
+  exchange     String   @default("NSE")
+  quantity     Int
+  averagePrice Decimal  @db.Decimal(18, 4)
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, exchange, symbol])
+}
+
+model Trade {
+  id        String          @id @default(uuid()) @db.Uuid
+  userId    String          @db.Uuid
+  orderId   String?         @db.Uuid
+  symbol    String
+  side      SignalDirection
+  quantity  Int
+  price     Decimal         @db.Decimal(18, 4)
+  fees      Decimal         @default(0) @db.Decimal(18, 4)
+  tradedAt  DateTime
+  createdAt DateTime        @default(now())
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order     Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([userId, tradedAt])
+  @@index([symbol, tradedAt])
+}
+
+model PortfolioSnapshot {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @db.Uuid
+  totalValue     Decimal  @db.Decimal(18, 4)
+  cashBalance    Decimal  @db.Decimal(18, 4)
+  unrealizedPnl  Decimal  @db.Decimal(18, 4)
+  realizedPnl    Decimal  @db.Decimal(18, 4)
+  capturedAt     DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, capturedAt])
+}
+
+model RiskConfiguration {
+  id                    String      @id @default(uuid()) @db.Uuid
+  userId                String      @unique @db.Uuid
+  tradingMode           TradingMode @default(SIGNAL_ONLY)
+  maxCapitalPerTrade    Decimal     @default(0) @db.Decimal(18, 4)
+  riskPerTradePercent   Decimal     @default(1) @db.Decimal(8, 4)
+  maxDailyLoss          Decimal     @default(0) @db.Decimal(18, 4)
+  maxTradesPerDay       Int         @default(0)
+  maxOpenPositions      Int         @default(0)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String             @id @default(uuid()) @db.Uuid
+  userId    String             @db.Uuid
+  title     String
+  body      String
+  status    NotificationStatus @default(UNREAD)
+  payload   Json?
+  createdAt DateTime           @default(now())
+  readAt    DateTime?
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, createdAt])
+}
+
+model Backtest {
+  id             String          @id @default(uuid()) @db.Uuid
+  userId         String          @db.Uuid
+  strategyId     String          @db.Uuid
+  symbolUniverse Json
+  startDate      DateTime
+  endDate        DateTime
+  timeframe      String
+  initialCapital Decimal         @db.Decimal(18, 4)
+  assumptions    Json
+  metrics        Json?
+  createdAt      DateTime        @default(now())
+  completedAt    DateTime?
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  strategy       Strategy        @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+  trades         BacktestTrade[]
+
+  @@index([userId, createdAt])
+  @@index([strategyId, createdAt])
+}
+
+model BacktestTrade {
+  id         String          @id @default(uuid()) @db.Uuid
+  backtestId String          @db.Uuid
+  symbol     String
+  side       SignalDirection
+  quantity   Int
+  entryPrice Decimal         @db.Decimal(18, 4)
+  exitPrice  Decimal?        @db.Decimal(18, 4)
+  pnl        Decimal?        @db.Decimal(18, 4)
+  enteredAt  DateTime
+  exitedAt   DateTime?
+  backtest   Backtest        @relation(fields: [backtestId], references: [id], onDelete: Cascade)
+
+  @@index([backtestId, enteredAt])
+  @@index([symbol, enteredAt])
+}
+
+model AuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String?  @db.Uuid
+  action        String
+  correlationId String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([correlationId])
+}
+

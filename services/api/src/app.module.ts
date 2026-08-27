@@ -5,6 +5,7 @@ import { appConfig, validateEnvironment } from './config/app.config';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
+import { MarketDataModule } from './market-data/market-data.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { RedisModule } from './redis/redis.module';
     }),
     PrismaModule,
     RedisModule,
+    MarketDataModule,
     HealthModule,
     AuthModule,
   ],

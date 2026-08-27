@@ -22,8 +22,11 @@ export class RedisService implements OnModuleDestroy {
     if (this.client.status === 'wait') {
       await this.client.connect();
     }
-
     return this.client.ping();
+  }
+
+  async publish(channel: string, message: string): Promise<number> {
+    return this.client.publish(channel, message);
   }
 
   onModuleDestroy(): void {

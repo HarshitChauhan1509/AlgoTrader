@@ -12,7 +12,7 @@ export function vwap(candles: Candle[]): number[] {
   let cumulativeVolume = 0;
 
   for (let i = 0; i < candles.length; i++) {
-    const candle = candles[i];
+    const candle = candles[i] as Candle;
     const typicalPrice = (candle.high + candle.low + candle.close) / 3;
     
     cumulativeTypicalPriceVolume += typicalPrice * candle.volume;
@@ -27,3 +27,4 @@ export function vwap(candles: Candle[]): number[] {
 
   return result;
 }
+

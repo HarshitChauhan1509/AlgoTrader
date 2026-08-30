@@ -17,12 +17,12 @@ export function atr(candles: Candle[], period: number = 14): (number | null)[] {
   const trueRanges: number[] = [];
 
   // TR for first candle is just High - Low
-  trueRanges.push(candles[0].high - candles[0].low);
+  trueRanges.push((candles[0] as Candle).high - (candles[0] as Candle).low);
 
   for (let i = 1; i < candles.length; i++) {
-    const currentHigh = candles[i].high;
-    const currentLow = candles[i].low;
-    const prevClose = candles[i - 1].close;
+    const currentHigh = (candles[i] as Candle).high;
+    const currentLow = (candles[i] as Candle).low;
+    const prevClose = (candles[i - 1] as Candle).close;
 
     const tr1 = currentHigh - currentLow;
     const tr2 = Math.abs(currentHigh - prevClose);
@@ -34,7 +34,7 @@ export function atr(candles: Candle[], period: number = 14): (number | null)[] {
   // First ATR is the simple average of the first 'period' True Ranges
   let initialTrSum = 0;
   for (let i = 1; i <= period; i++) {
-    initialTrSum += trueRanges[i];
+    initialTrSum += (trueRanges[i] as number);
   }
   
   let currentAtr = initialTrSum / period;
@@ -42,9 +42,10 @@ export function atr(candles: Candle[], period: number = 14): (number | null)[] {
 
   // Subsequent ATRs use Wilder's smoothing
   for (let i = period + 1; i < candles.length; i++) {
-    currentAtr = (currentAtr * (period - 1) + trueRanges[i]) / period;
+    currentAtr = (currentAtr * (period - 1) + (trueRanges[i] as number)) / period;
     result.push(currentAtr);
   }
 
   return result;
 }
+

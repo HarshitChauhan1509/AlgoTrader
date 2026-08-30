@@ -46,11 +46,12 @@ export function macd(
     if (currentSignal === null) continue;
 
     result[i] = {
-      macd: currentMacd,
-      signal: currentSignal,
-      histogram: currentMacd - currentSignal,
+      macd: currentMacd as number,
+      signal: currentSignal as number,
+      histogram: (currentMacd as number) - (currentSignal as number),
     };
   }
 
   return result;
 }
+

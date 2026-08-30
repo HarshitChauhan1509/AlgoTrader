@@ -34,7 +34,7 @@ export function bollingerBands(
     let sumSquaredDiff = 0;
     for (let j = 0; j < period; j++) {
       const price = data[i - j] as number;
-      sumSquaredDiff += Math.pow(price - currentSma, 2);
+      sumSquaredDiff += Math.pow(price - (currentSma as number), 2);
     }
     
     // Sample variance (period) or population (period-1). Usually standard BB uses population (period).
@@ -42,11 +42,13 @@ export function bollingerBands(
     const stdDev = Math.sqrt(variance);
 
     result[i] = {
-      middle: currentSma,
-      upper: currentSma + (stdDev * stdDevMultiplier),
-      lower: currentSma - (stdDev * stdDevMultiplier),
+      middle: currentSma as number,
+      upper: (currentSma as number) + (stdDev * stdDevMultiplier),
+      lower: (currentSma as number) - (stdDev * stdDevMultiplier),
     };
   }
 
   return result;
 }
+
+

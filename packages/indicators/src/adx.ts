@@ -23,13 +23,12 @@ export function adx(candles: Candle[], period: number = 14): (ADXOutput | null)[
   const plusDm: number[] = [];
   const minusDm: number[] = [];
 
-  // Calculate TR, +DM, -DM
   for (let i = 1; i < candles.length; i++) {
-    const currentHigh = candles[i].high;
-    const currentLow = candles[i].low;
-    const prevHigh = candles[i - 1].high;
-    const prevLow = candles[i - 1].low;
-    const prevClose = candles[i - 1].close;
+    const currentHigh = (candles[i] as Candle).high;
+    const currentLow = (candles[i] as Candle).low;
+    const prevHigh = (candles[i - 1] as Candle).high;
+    const prevLow = (candles[i - 1] as Candle).low;
+    const prevClose = (candles[i - 1] as Candle).close;
 
     const tr1 = currentHigh - currentLow;
     const tr2 = Math.abs(currentHigh - prevClose);
@@ -55,15 +54,14 @@ export function adx(candles: Candle[], period: number = 14): (ADXOutput | null)[
 
   const result: (ADXOutput | null)[] = createEmptyArray(candles.length);
 
-  // Initial sum for first period (using simple sum as base for smoothing)
   let smoothedTr = 0;
   let smoothedPlusDm = 0;
   let smoothedMinusDm = 0;
 
   for (let i = 0; i < period; i++) {
-    smoothedTr += tr[i];
-    smoothedPlusDm += plusDm[i];
-    smoothedMinusDm += minusDm[i];
+    smoothedTr += tr[i] as number;
+    smoothedPlusDm += plusDm[i] as number;
+    smoothedMinusDm += minusDm[i] as number;
   }
 
   const dxValues: number[] = [];
@@ -78,14 +76,6 @@ export function adx(candles: Candle[], period: number = 14): (ADXOutput | null)[
   let initialDiDx = calculateDiAndDx(smoothedTr, smoothedPlusDm, smoothedMinusDm);
   dxValues.push(initialDiDx.dx);
   
-  // Note: ADX is a smoothing of DX over `period` days.
-  // So the first ADX value requires `period` DX values! 
-  // Hence the first ADX value actually appears at `2 * period - 1` data points if we follow Wilder strictly.
-  // But standard implementations often start outputting +DI and -DI immediately, leaving ADX null until enough DX exists.
-  
-  // We'll calculate the rest of TR and DM using Wilder's Smoothing: 
-  // Current = Prev - (Prev/Period) + Current
-  
   const pDiArray: number[] = createEmptyArray(candles.length) as any;
   const mDiArray: number[] = createEmptyArray(candles.length) as any;
   
@@ -93,9 +83,9 @@ export function adx(candles: Candle[], period: number = 14): (ADXOutput | null)[
   mDiArray[period] = initialDiDx.mDi;
   
   for (let i = period; i < tr.length; i++) {
-    smoothedTr = smoothedTr - (smoothedTr / period) + tr[i];
-    smoothedPlusDm = smoothedPlusDm - (smoothedPlusDm / period) + plusDm[i];
-    smoothedMinusDm = smoothedMinusDm - (smoothedMinusDm / period) + minusDm[i];
+    smoothedTr = smoothedTr - (smoothedTr / period) + (tr[i] as number);
+    smoothedPlusDm = smoothedPlusDm - (smoothedPlusDm / period) + (plusDm[i] as number);
+    smoothedMinusDm = smoothedMinusDm - (smoothedMinusDm / period) + (minusDm[i] as number);
 
     const vals = calculateDiAndDx(smoothedTr, smoothedPlusDm, smoothedMinusDm);
     dxValues.push(vals.dx);
@@ -103,33 +93,29 @@ export function adx(candles: Candle[], period: number = 14): (ADXOutput | null)[
     mDiArray[i + 1] = vals.mDi;
   }
 
-  // Now smooth DX to get ADX
   if (dxValues.length >= period) {
     let adxSum = 0;
     for (let i = 0; i < period; i++) {
-      adxSum += dxValues[i];
+      adxSum += dxValues[i] as number;
     }
     let currentAdx = adxSum / period;
     
-    // The first ADX value corresponds to index: period + period - 1 = 2*period - 1 in original candles
-    // But index in dxValues is 'period - 1'.
     const adxStartIndex = 2 * period - 1;
     if (adxStartIndex < candles.length) {
       result[adxStartIndex] = {
         adx: currentAdx,
-        plusDi: pDiArray[adxStartIndex],
-        minusDi: mDiArray[adxStartIndex],
+        plusDi: pDiArray[adxStartIndex] as number,
+        minusDi: mDiArray[adxStartIndex] as number,
       };
     }
 
-    // Subsequent ADX
     let dxIdx = period;
     for (let i = adxStartIndex + 1; i < candles.length; i++) {
-      currentAdx = (currentAdx * (period - 1) + dxValues[dxIdx]) / period;
+      currentAdx = (currentAdx * (period - 1) + (dxValues[dxIdx] as number)) / period;
       result[i] = {
         adx: currentAdx,
-        plusDi: pDiArray[i],
-        minusDi: mDiArray[i],
+        plusDi: pDiArray[i] as number,
+        minusDi: mDiArray[i] as number,
       };
       dxIdx++;
     }

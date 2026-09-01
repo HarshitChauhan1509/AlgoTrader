@@ -6,6 +6,7 @@ import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { MarketDataModule } from './market-data/market-data.module';
+import { StrategyEngineModule } from './strategy-engine/strategy-engine.module';
 
 @Module({
   imports: [
@@ -18,9 +19,11 @@ import { MarketDataModule } from './market-data/market-data.module';
     PrismaModule,
     RedisModule,
     MarketDataModule,
+    StrategyEngineModule,
     HealthModule,
     AuthModule,
   ],
 })
 export class AppModule {}
+
 

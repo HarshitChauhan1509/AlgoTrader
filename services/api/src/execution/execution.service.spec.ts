@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionService } from './execution.service';
 import { RedisService } from '../redis/redis.service';
+import { RiskService } from '../risk/risk.service';
 import { Signal, Order } from '@stock-platform/types';
 
 describe('ExecutionService', () => {
@@ -29,6 +30,7 @@ describe('ExecutionService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: RiskService, useValue: { evaluateOrder: jest.fn().mockReturnValue({ approved: true }) } },
         ExecutionService,
         { provide: RedisService, useValue: redisService },
       ],
@@ -94,3 +96,4 @@ describe('ExecutionService', () => {
     jest.useRealTimers();
   });
 });
+

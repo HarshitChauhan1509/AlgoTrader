@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { MarketDataModule } from './market-data/market-data.module';
 import { StrategyEngineModule } from './strategy-engine/strategy-engine.module';
+import { ExecutionModule } from './execution/execution.module';
 
 @Module({
   imports: [
@@ -20,10 +21,12 @@ import { StrategyEngineModule } from './strategy-engine/strategy-engine.module';
     RedisModule,
     MarketDataModule,
     StrategyEngineModule,
+    ExecutionModule,
     HealthModule,
     AuthModule,
   ],
 })
 export class AppModule {}
+
 
 

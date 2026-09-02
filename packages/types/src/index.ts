@@ -13,7 +13,7 @@ export interface Signal {
   price: number;
 }
 
-export type OrderStatus = 'PENDING' | 'EXECUTED' | 'FAILED' | 'CANCELLED';
+export type OrderStatus = 'PENDING' | 'EXECUTED' | 'FAILED' | 'CANCELLED' | 'REJECTED';
 export type OrderType = 'MARKET' | 'LIMIT';
 
 export interface Order {

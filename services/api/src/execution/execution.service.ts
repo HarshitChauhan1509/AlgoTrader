@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
+import { RiskService } from '../risk/risk.service';
 import { Order, OrderStatus, OrderType, Signal } from '@stock-platform/types';
 import * as crypto from 'crypto';
 
@@ -10,7 +11,10 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
   // Track orders in memory for the stub
   private readonly orders = new Map<string, Order>();
 
-  constructor(private readonly redisService: RedisService) {}
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly riskService: RiskService
+  ) {}
 
   async onModuleInit() {
     this.logger.log('Initializing Execution Engine...');
@@ -59,6 +63,16 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
       timestamp: new Date(),
     };
 
+    const riskAssessment = this.riskService.evaluateOrder(order);
+
+    if (!riskAssessment.approved) {
+      order.status = 'REJECTED';
+      this.logger.warn(`Order ${order.id} REJECTED: ${riskAssessment.reason}`);
+      this.orders.set(order.id, order);
+      await this.publishOrderUpdate(order);
+      return;
+    }
+
     this.orders.set(order.id, order);
     await this.publishOrderUpdate(order);
 
@@ -101,3 +115,5 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
     return this.orders.get(id);
   }
 }
+
+

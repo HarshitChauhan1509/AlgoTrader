@@ -8,6 +8,7 @@ import { RedisModule } from './redis/redis.module';
 import { MarketDataModule } from './market-data/market-data.module';
 import { StrategyEngineModule } from './strategy-engine/strategy-engine.module';
 import { ExecutionModule } from './execution/execution.module';
+import { RiskModule } from './risk/risk.module';
 
 @Module({
   imports: [
@@ -22,11 +23,13 @@ import { ExecutionModule } from './execution/execution.module';
     MarketDataModule,
     StrategyEngineModule,
     ExecutionModule,
+    RiskModule,
     HealthModule,
     AuthModule,
   ],
 })
 export class AppModule {}
+
 
 
 

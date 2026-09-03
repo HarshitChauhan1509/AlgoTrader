@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionService } from './execution.service';
 import { RedisService } from '../redis/redis.service';
 import { RiskService } from '../risk/risk.service';
+import { BROKER_ADAPTER_TOKEN } from './broker/broker.adapter';
 import { Signal, Order } from '@stock-platform/types';
 
 describe('ExecutionService', () => {
@@ -31,6 +32,7 @@ describe('ExecutionService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         { provide: RiskService, useValue: { evaluateOrder: jest.fn().mockReturnValue({ approved: true }) } },
+        { provide: BROKER_ADAPTER_TOKEN, useValue: { placeOrder: jest.fn().mockResolvedValue({ status: 'COMPLETE' }) } },
         ExecutionService,
         { provide: RedisService, useValue: redisService },
       ],
@@ -96,4 +98,5 @@ describe('ExecutionService', () => {
     jest.useRealTimers();
   });
 });
+
 

@@ -1,5 +1,6 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, OnModuleDestroy, Inject } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
+import { BrokerAdapter, BROKER_ADAPTER_TOKEN } from './broker/broker.adapter';
 import { RiskService } from '../risk/risk.service';
 import { Order, OrderStatus, OrderType, Signal } from '@stock-platform/types';
 import * as crypto from 'crypto';
@@ -13,7 +14,8 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private readonly redisService: RedisService,
-    private readonly riskService: RiskService
+    private readonly riskService: RiskService,
+    @Inject(BROKER_ADAPTER_TOKEN) private readonly brokerAdapter: BrokerAdapter
   ) {}
 
   async onModuleInit() {
@@ -73,30 +75,36 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    this.orders.set(order.id, order);
+        this.orders.set(order.id, order);
     await this.publishOrderUpdate(order);
 
-    // Simulate Network/Broker Delay (100ms - 500ms)
-    const delay = Math.floor(Math.random() * 400) + 100;
-    setTimeout(() => {
-      this.executeOrder(order);
-    }, delay);
+    // Handoff to Broker Adapter
+    await this.executeOrder(order);
   }
 
   /**
    * Simulates the broker's response confirming the trade execution.
    */
   private async executeOrder(order: Order) {
-    // In a real system, we would await a REST/WebSocket response from the broker here.
-    // For the stub, we simulate a successful execution 95% of the time.
-    
-    const isSuccess = Math.random() > 0.05;
-    
-    order.status = isSuccess ? 'EXECUTED' : 'FAILED';
-    this.logger.log(`Order ${order.id} for ${order.symbol} ${order.status}`);
-    
-    this.orders.set(order.id, order);
-    await this.publishOrderUpdate(order);
+    try {
+      const response = await this.brokerAdapter.placeOrder(order);
+      
+      if (response.status === 'COMPLETE') {
+        order.status = 'EXECUTED';
+      } else {
+        order.status = 'FAILED';
+      }
+      
+      this.logger.log(`Order ${order.id} for ${order.symbol} ${order.status}`);
+      
+      this.orders.set(order.id, order);
+      await this.publishOrderUpdate(order);
+    } catch (e) {
+      this.logger.error(`Failed to execute order ${order.id}`, e);
+      order.status = 'FAILED';
+      this.orders.set(order.id, order);
+      await this.publishOrderUpdate(order);
+    }
   }
 
   /**
@@ -115,5 +123,7 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
     return this.orders.get(id);
   }
 }
+
+
 
 

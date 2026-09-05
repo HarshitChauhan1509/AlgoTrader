@@ -19,6 +19,7 @@ export type OrderType = 'MARKET' | 'LIMIT';
 export interface Order {
   id: string;
   strategyId?: string;
+  portfolioId?: string;
   symbol: string;
   action: 'BUY' | 'SELL';
   type: OrderType;
@@ -27,3 +28,4 @@ export interface Order {
   status: OrderStatus;
   timestamp: Date;
 }
+

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -13,9 +14,9 @@ export default function Home() {
   const [symbol, setSymbol] = useState('RELIANCE');
   const [timeframe, setTimeframe] = useState('15m');
   const [isConnected, setIsConnected] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
 
   useEffect(() => {
-    // 1. Initialize Lightweight Chart
     if (chartContainerRef.current) {
       const chart = createChart(chartContainerRef.current, {
         layout: { background: { color: '#222' }, textColor: '#DDD' },
@@ -24,7 +25,7 @@ export default function Home() {
           horzLines: { color: '#444' },
         },
         width: chartContainerRef.current.clientWidth,
-        height: 500,
+        height: 600,
       });
 
       const candlestickSeries = chart.addCandlestickSeries({
@@ -38,7 +39,6 @@ export default function Home() {
       chartRef.current = chart;
       seriesRef.current = candlestickSeries;
 
-      // Handle Resize
       const handleResize = () => {
         if (chartContainerRef.current && chartRef.current) {
           chartRef.current.applyOptions({
@@ -56,7 +56,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // 2. Connect to WebSocket Gateway
     const socket = io('http://localhost:3000');
     socketRef.current = socket;
 
@@ -69,10 +68,8 @@ export default function Home() {
       setIsConnected(false);
     });
 
-    // 3. Handle incoming live market data
     socket.on('candle', (data: any) => {
       if (seriesRef.current) {
-        // lightweight-charts expects time as unix timestamp in seconds for timestamps
         const time = Math.floor(new Date(data.timestamp).getTime() / 1000);
         seriesRef.current.update({
           time: time as any,
@@ -82,6 +79,18 @@ export default function Home() {
           close: data.close,
         });
       }
+    });
+
+    socket.on('orderUpdate', (order: any) => {
+      setOrders(prev => {
+        const existing = prev.findIndex(o => o.id === order.id);
+        if (existing >= 0) {
+          const newOrders = [...prev];
+          newOrders[existing] = order;
+          return newOrders;
+        }
+        return [order, ...prev];
+      });
     });
 
     return () => {
@@ -124,11 +133,42 @@ export default function Home() {
           </select>
         </div>
 
-        <div 
-          ref={chartContainerRef} 
-          className="w-full h-[500px] border border-gray-800 rounded-lg overflow-hidden" 
-        />
+        <div className="flex gap-6">
+          <div className="flex-grow">
+            <div 
+              ref={chartContainerRef} 
+              className="w-full h-[600px] border border-gray-800 rounded-lg overflow-hidden" 
+            />
+          </div>
+          
+          <div className="w-80 flex-shrink-0 bg-gray-900 border border-gray-800 rounded-lg p-4 h-[600px] flex flex-col">
+            <h2 className="text-xl font-bold mb-4 border-b border-gray-800 pb-2">Recent Orders</h2>
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+              {orders.length === 0 ? (
+                <p className="text-gray-500 text-sm text-center mt-10">No orders yet</p>
+              ) : (
+                orders.map((o) => (
+                  <div key={o.id} className="bg-gray-800 p-3 rounded text-sm border border-gray-700">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className={`font-bold ${o.action === 'BUY' ? 'text-green-400' : 'text-red-400'}`}>
+                        {o.action} {o.symbol}
+                      </span>
+                      <span className="text-gray-400">{o.quantity} qty</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className={`px-2 py-0.5 rounded ${o.status === 'EXECUTED' ? 'bg-green-900/50 text-green-400' : o.status === 'REJECTED' || o.status === 'FAILED' ? 'bg-red-900/50 text-red-400' : 'bg-yellow-900/50 text-yellow-400'}`}>
+                        {o.status}
+                      </span>
+                      <span className="text-gray-500">{new Date(o.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   );
 }
+

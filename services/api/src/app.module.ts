@@ -10,6 +10,7 @@ import { StrategyEngineModule } from './strategy-engine/strategy-engine.module';
 import { ExecutionModule } from './execution/execution.module';
 import { RiskModule } from './risk/risk.module';
 import { GatewayModule } from './gateway/gateway.module';
+import { PortfolioModule } from './portfolio/portfolio.module';
 
 @Module({
   imports: [
@@ -26,11 +27,13 @@ import { GatewayModule } from './gateway/gateway.module';
     ExecutionModule,
     RiskModule,
     GatewayModule,
+    PortfolioModule,
     HealthModule,
     AuthModule,
   ],
 })
 export class AppModule {}
+
 
 
 

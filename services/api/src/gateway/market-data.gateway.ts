@@ -32,22 +32,32 @@ export class MarketDataGateway
     // Duplicate client for subscribing to Redis channels without blocking the main client
     this.subscriberClient = this.redisService.getClient().duplicate();
     await this.subscriberClient.psubscribe('market-data:candles:*:*');
+    await this.subscriberClient.subscribe('execution:orders');
 
     // Listen for market data events from Redis and broadcast to active WS rooms
     this.subscriberClient.on('pmessage', (pattern: string, channel: string, message: string) => {
-      // e.g., channel = "market-data:candles:RELIANCE:15m"
       const parts = channel.split(':');
       if (parts.length === 4) {
         const symbol = parts[2];
         const timeframe = parts[3];
         const room = `${symbol}-${timeframe}`;
         
-        // Broadcast the JSON message to anyone subscribed to this room
         try {
           const candleData = JSON.parse(message);
           this.server.to(room).emit('candle', candleData);
         } catch (e) {
           this.logger.error(`Error parsing candle from redis: ${message}`, e);
+        }
+      }
+    });
+
+    this.subscriberClient.on('message', (channel: string, message: string) => {
+      if (channel === 'execution:orders') {
+        try {
+          const order = JSON.parse(message);
+          this.server.emit('orderUpdate', order);
+        } catch (e) {
+          this.logger.error(`Error parsing order from redis: ${message}`, e);
         }
       }
     });
@@ -90,4 +100,3 @@ export class MarketDataGateway
     return { status: 'unsubscribed', room };
   }
 }
-

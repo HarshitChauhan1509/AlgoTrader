@@ -9,6 +9,7 @@ import { MarketDataModule } from './market-data/market-data.module';
 import { StrategyEngineModule } from './strategy-engine/strategy-engine.module';
 import { ExecutionModule } from './execution/execution.module';
 import { RiskModule } from './risk/risk.module';
+import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -24,11 +25,13 @@ import { RiskModule } from './risk/risk.module';
     StrategyEngineModule,
     ExecutionModule,
     RiskModule,
+    GatewayModule,
     HealthModule,
     AuthModule,
   ],
 })
 export class AppModule {}
+
 
 
 

@@ -122,6 +122,14 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+    public async getDefaultPortfolioWithPositions() {
+    const portfolio = await this.getDefaultPortfolio();
+    return this.prisma.portfolio.findUnique({
+      where: { id: portfolio.id },
+      include: { positions: true }
+    });
+  }
+
   private async getDefaultPortfolio() {
     let portfolio = await this.prisma.portfolio.findFirst({
       where: { type: 'PAPER' }
@@ -156,4 +164,5 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
     return portfolio;
   }
 }
+
 

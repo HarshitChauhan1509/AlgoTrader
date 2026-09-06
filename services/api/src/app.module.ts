@@ -11,6 +11,7 @@ import { ExecutionModule } from './execution/execution.module';
 import { RiskModule } from './risk/risk.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
+import { BacktestModule } from './backtest/backtest.module';
 
 @Module({
   imports: [
@@ -28,11 +29,13 @@ import { PortfolioModule } from './portfolio/portfolio.module';
     RiskModule,
     GatewayModule,
     PortfolioModule,
+    BacktestModule,
     HealthModule,
     AuthModule,
   ],
 })
 export class AppModule {}
+
 
 
 

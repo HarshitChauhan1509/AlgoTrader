@@ -65,7 +65,7 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
       timestamp: new Date(),
     };
 
-    const riskAssessment = this.riskService.evaluateOrder(order);
+    const riskAssessment = await this.riskService.evaluateOrder(order);
 
     if (!riskAssessment.approved) {
       order.status = 'REJECTED';
@@ -123,6 +123,7 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
     return this.orders.get(id);
   }
 }
+
 
 
 

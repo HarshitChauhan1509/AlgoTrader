@@ -31,7 +31,7 @@ describe('ExecutionService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        { provide: RiskService, useValue: { evaluateOrder: jest.fn().mockReturnValue({ approved: true }) } },
+        { provide: RiskService, useValue: { evaluateOrder: jest.fn().mockResolvedValue({ approved: true }) } },
         { provide: BROKER_ADAPTER_TOKEN, useValue: { placeOrder: jest.fn().mockResolvedValue({ status: 'COMPLETE' }) } },
         ExecutionService,
         { provide: RedisService, useValue: redisService },
@@ -98,5 +98,6 @@ describe('ExecutionService', () => {
     jest.useRealTimers();
   });
 });
+
 
 

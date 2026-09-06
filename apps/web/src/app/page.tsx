@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { createChart, IChartApi, ISeriesApi } from 'lightweight-charts';
 import { io, Socket } from 'socket.io-client';
 
@@ -15,6 +15,24 @@ export default function Home() {
   const [timeframe, setTimeframe] = useState('15m');
   const [isConnected, setIsConnected] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
+  const [portfolio, setPortfolio] = useState<any>(null);
+
+  const fetchPortfolio = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:3001/api/portfolio');
+      if (res.ok) {
+        const data = await res.json();
+        setPortfolio(data);
+      }
+    } catch (e) {
+      console.error('Failed to fetch portfolio', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Initial fetch
+    fetchPortfolio();
+  }, [fetchPortfolio]);
 
   useEffect(() => {
     if (chartContainerRef.current) {
@@ -56,7 +74,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const socket = io('http://localhost:3000');
+    const socket = io('http://localhost:3001');
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -91,17 +109,23 @@ export default function Home() {
         }
         return [order, ...prev];
       });
+
+      // Refresh portfolio if an order was executed
+      if (order.status === 'EXECUTED') {
+        // Small delay to ensure DB transaction committed before we fetch
+        setTimeout(() => fetchPortfolio(), 500);
+      }
     });
 
     return () => {
       socket.emit('unsubscribe', { symbol, timeframe });
       socket.disconnect();
     };
-  }, [symbol, timeframe]);
+  }, [symbol, timeframe, fetchPortfolio]);
 
   return (
     <main className="min-h-screen bg-[#121212] p-8 text-white">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <header className="flex justify-between items-center border-b border-gray-800 pb-4">
           <h1 className="text-2xl font-bold">AlgoTrader Dashboard</h1>
           <div className="flex items-center space-x-2">
@@ -110,11 +134,32 @@ export default function Home() {
           </div>
         </header>
 
+        {/* Portfolio Banner */}
+        {portfolio && (
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 flex justify-between items-center">
+            <div>
+              <p className="text-sm text-gray-400">Available Margin</p>
+              <p className="text-2xl font-bold text-green-400">₹{portfolio.currentBalance.toLocaleString()}</p>
+            </div>
+            <div className="flex space-x-4">
+              {portfolio.positions?.map((pos: any) => (
+                <div key={pos.id} className="bg-gray-800 px-4 py-2 rounded border border-gray-700 text-sm">
+                  <p className="font-bold text-gray-200">{pos.symbol}</p>
+                  <p className="text-gray-400">{pos.quantity} Qty @ ₹{pos.averagePrice}</p>
+                </div>
+              ))}
+              {portfolio.positions?.length === 0 && (
+                <div className="text-gray-500 text-sm py-2">No active positions</div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-4 mb-4">
           <select 
             value={symbol} 
             onChange={(e) => setSymbol(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded px-4 py-2"
+            className="bg-gray-800 border border-gray-700 rounded px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="RELIANCE">RELIANCE</option>
             <option value="TCS">TCS</option>
@@ -124,7 +169,7 @@ export default function Home() {
           <select 
             value={timeframe} 
             onChange={(e) => setTimeframe(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded px-4 py-2"
+            className="bg-gray-800 border border-gray-700 rounded px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="1m">1m</option>
             <option value="5m">5m</option>
@@ -171,4 +216,3 @@ export default function Home() {
     </main>
   );
 }
-

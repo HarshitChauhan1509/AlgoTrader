@@ -8,6 +8,7 @@
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "start:prod": "prisma migrate deploy && node dist/main",
     "test": "jest",
     "test:cov": "jest --coverage",
     "prisma:generate": "prisma generate",
@@ -59,3 +60,5 @@
     "typescript": "^5.5.4"
   }
 }
+
+

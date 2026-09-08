@@ -15,6 +15,7 @@ describe('MarketDataGateway', () => {
 
     const mockDuplicateClient = {
       psubscribe: mockSubscribe,
+      subscribe: jest.fn(),
       on: mockOn,
     };
 
@@ -65,3 +66,4 @@ describe('MarketDataGateway', () => {
     expect(response).toEqual({ status: 'unsubscribed', room: 'TCS-1h' });
   });
 });
+

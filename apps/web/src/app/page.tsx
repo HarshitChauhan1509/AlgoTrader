@@ -126,8 +126,14 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#121212] p-8 text-white">
       <div className="max-w-7xl mx-auto space-y-6">
-        <header className="flex justify-between items-center border-b border-gray-800 pb-4">
-          <h1 className="text-2xl font-bold">AlgoTrader Dashboard</h1>
+                <header className="flex justify-between items-center border-b border-gray-800 pb-4">
+          <div className="flex items-center space-x-6">
+            <h1 className="text-2xl font-bold">AlgoTrader Dashboard</h1>
+            <nav className="space-x-4">
+              <a href="/" className="text-white font-semibold">Live Trading</a>
+              <a href="/backtest" className="text-gray-400 hover:text-white transition-colors">Backtest</a>
+            </nav>
+          </div>
           <div className="flex items-center space-x-2">
             <span className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
             <span className="text-sm text-gray-400">{isConnected ? 'Connected to Market Data' : 'Disconnected'}</span>
@@ -216,3 +222,4 @@ export default function Home() {
     </main>
   );
 }
+

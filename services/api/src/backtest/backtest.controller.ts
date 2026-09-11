@@ -1,7 +1,10 @@
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Controller, Post, Body, Logger } from '@nestjs/common';
 import { BacktestService, BacktestRequest } from './backtest.service';
 
 @Controller('backtest')
+@UseGuards(JwtAuthGuard)
 export class BacktestController {
   private readonly logger = new Logger(BacktestController.name);
 
@@ -13,3 +16,4 @@ export class BacktestController {
     return this.backtestService.runBacktest(request);
   }
 }
+

@@ -2,10 +2,12 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { createChart, IChartApi, ISeriesApi } from 'lightweight-charts';
 import { io, Socket } from 'socket.io-client';
 
 export default function Home() {
+  const router = useRouter();
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -19,7 +21,19 @@ export default function Home() {
 
   const fetchPortfolio = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/portfolio');
+            const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+      const res = await fetch('http://localhost:3001/api/portfolio', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.status === 401) {
+        localStorage.removeItem('accessToken');
+        router.push('/login');
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setPortfolio(data);
@@ -46,7 +60,7 @@ export default function Home() {
         height: 600,
       });
 
-      const candlestickSeries = chart.addCandlestickSeries({
+      const candlestickSeries = (chart as any).addCandlestickSeries({
         upColor: '#26a69a',
         downColor: '#ef5350',
         borderVisible: false,
@@ -134,10 +148,13 @@ export default function Home() {
               <a href="/backtest" className="text-gray-400 hover:text-white transition-colors">Backtest</a>
             </nav>
           </div>
-          <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-4">
+            <button onClick={() => { localStorage.removeItem('accessToken'); router.push('/login'); }} className="text-sm text-gray-400 hover:text-white">Logout</button>
+            <div className="flex items-center space-x-2">
             <span className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
             <span className="text-sm text-gray-400">{isConnected ? 'Connected to Market Data' : 'Disconnected'}</span>
           </div>
+        </div>
         </header>
 
         {/* Portfolio Banner */}
@@ -222,4 +239,12 @@ export default function Home() {
     </main>
   );
 }
+
+
+
+
+
+
+
+
 

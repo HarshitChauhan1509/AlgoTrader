@@ -3,8 +3,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function BacktestPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
@@ -46,9 +48,14 @@ export default function BacktestPage() {
     };
 
     try {
+            const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
       const res = await fetch('http://localhost:3001/api/backtest/run', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
       
@@ -75,6 +82,9 @@ export default function BacktestPage() {
               <Link href="/" className="text-gray-400 hover:text-white transition-colors">Live Trading</Link>
               <Link href="/backtest" className="text-white font-semibold">Backtest</Link>
             </nav>
+          </div>
+                  <div className="flex items-center space-x-4">
+            <button onClick={() => { localStorage.removeItem('accessToken'); router.push('/login'); }} className="text-sm text-gray-400 hover:text-white">Logout</button>
           </div>
         </header>
 
@@ -218,4 +228,7 @@ export default function BacktestPage() {
     </main>
   );
 }
+
+
+
 

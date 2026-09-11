@@ -1,5 +1,7 @@
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Get, Logger, UseGuards } from '@nestjs/common';
 import { PortfolioService } from './portfolio.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('portfolio')
 export class PortfolioController {
@@ -7,9 +9,10 @@ export class PortfolioController {
 
   constructor(private readonly portfolioService: PortfolioService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  async getPortfolio() {
-    this.logger.log('Fetching default portfolio state for dashboard');
-    return this.portfolioService.getDefaultPortfolioWithPositions();
+  async getPortfolio(@CurrentUser() user: { sub: string }) {
+    this.logger.log(`Fetching portfolio state for user ${user.sub}`);
+    return this.portfolioService.getPortfolioWithPositions(user.sub);
   }
 }

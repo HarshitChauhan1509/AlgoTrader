@@ -42,8 +42,8 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
       let portfolioId = order.portfolioId;
       if (!portfolioId) {
         // Fallback: Find or create a default PAPER portfolio
-        const defaultPortfolio = await this.getDefaultPortfolio();
-        portfolioId = defaultPortfolio.id;
+        const defaultPortfolio = await this.prisma.portfolio.findFirst({ where: { type: 'PAPER' } }); // Fallback for systemic headless orders without portfolioId
+        if (defaultPortfolio) { portfolioId = defaultPortfolio.id; } else { this.logger.error('No default portfolio found'); return; }
       }
 
       // 2. Calculate impact
@@ -122,18 +122,16 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-    public async getDefaultPortfolioWithPositions() {
-    const portfolio = await this.getDefaultPortfolio();
+    public async getPortfolioWithPositions(userId: string) {
+    const portfolio = await this.getOrCreatePortfolioForUser(userId);
     return this.prisma.portfolio.findUnique({
       where: { id: portfolio.id },
       include: { positions: true }
     });
   }
 
-  private async getDefaultPortfolio() {
-    let portfolio = await this.prisma.portfolio.findFirst({
-      where: { type: 'PAPER' }
-    });
+  private async getOrCreatePortfolioForUser(userId: string) {
+    let portfolio = await this.prisma.portfolio.findFirst({ where: { userId, type: 'PAPER' } });
 
     if (!portfolio) {
       // Find a user or create a dummy user to attach to
@@ -143,8 +141,7 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
           data: {
             email: 'system@algotrader.local',
             passwordHash: 'dummy',
-            firstName: 'System',
-            lastName: 'User'
+            name: 'System User'
           }
         });
       }
@@ -154,7 +151,7 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
           userId: user.id,
           name: 'Default Paper Trading',
           type: 'PAPER',
-          startBalance: 100000,
+          initialBalance: 100000,
           currentBalance: 100000,
         }
       });
@@ -164,5 +161,8 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
     return portfolio;
   }
 }
+
+
+
 
 

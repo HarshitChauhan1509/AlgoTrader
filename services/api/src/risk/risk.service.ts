@@ -60,7 +60,7 @@ export class RiskService {
 
       // Rule 4: Sufficient Cash Balance for BUY
       if (order.action === 'BUY') {
-        if (portfolio.currentBalance < orderValue) {
+        if (Number(portfolio.currentBalance) < orderValue) {
           const reason = `Insufficient funds. Required: ${orderValue}, Available: ${portfolio.currentBalance}`;
           this.logger.warn(reason);
           return { approved: false, reason };
@@ -100,3 +100,4 @@ export class RiskService {
     this.dailyOrdersCount = 0;
   }
 }
+

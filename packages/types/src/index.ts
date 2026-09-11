@@ -3,6 +3,7 @@ export type TradingMode = 'SIGNAL_ONLY' | 'PAPER_TRADING' | 'MANUAL_EXECUTION' |
 export const DEFAULT_TRADING_MODE: TradingMode = 'SIGNAL_ONLY';
 
 export * from './market-data';
+import { Timeframe } from './market-data';
 
 export interface Signal {
   symbol: string;
@@ -28,4 +29,5 @@ export interface Order {
   status: OrderStatus;
   timestamp: Date;
 }
+
 

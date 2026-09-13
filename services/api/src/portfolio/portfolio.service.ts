@@ -121,7 +121,30 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
           this.logger.warn(`Attempted to SELL ${order.symbol} without an existing position!`);
         }
 
-        // Optional: We can also insert the Order into the DB here if it hasn't been saved yet.
+        
+        let realizedPnL = null;
+        if (existingPosition && order.action === 'SELL') {
+          // Calculate PnL for the quantity being sold
+          realizedPnL = (Number(order.price) - Number(existingPosition.averagePrice)) * order.quantity;
+        } else if (existingPosition && order.action === 'BUY' && existingPosition.quantity < 0) {
+          // Short covering
+          realizedPnL = (Number(existingPosition.averagePrice) - Number(order.price)) * order.quantity;
+        }
+
+        await tx.trade.create({
+          data: {
+            userId: portfolio.userId,
+            portfolioId: portfolioId as string,
+            orderId: null, // Since we aren't perfectly syncing Orders table yet
+            symbol: order.symbol,
+            side: order.action,
+            quantity: order.quantity,
+            price: order.price || 0,
+            realizedPnL: realizedPnL,
+            tradedAt: order.timestamp || new Date(),
+          }
+        });
+  
       });
 
     } catch (e) {
@@ -129,7 +152,45 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-    public async getPortfolioWithPositions(userId: string) {
+    public async getPortfolioMetrics(userId: string) {
+    const portfolio = await this.getOrCreatePortfolioForUser(userId);
+    const trades = await this.prisma.trade.findMany({
+      where: { portfolioId: portfolio.id, realizedPnL: { not: null } }
+    });
+
+    let totalPnL = 0;
+    let winningTrades = 0;
+    let losingTrades = 0;
+    let bestTrade = 0;
+    let worstTrade = 0;
+
+    for (const t of trades) {
+      const pnl = Number(t.realizedPnL);
+      totalPnL += pnl;
+      if (pnl > 0) {
+        winningTrades++;
+        if (pnl > bestTrade) bestTrade = pnl;
+      } else if (pnl < 0) {
+        losingTrades++;
+        if (pnl < worstTrade) worstTrade = pnl;
+      }
+    }
+
+    const totalTrades = winningTrades + losingTrades;
+    const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
+
+    return {
+      totalPnL,
+      totalTrades,
+      winRate: Number(winRate.toFixed(2)),
+      winningTrades,
+      losingTrades,
+      bestTrade,
+      worstTrade
+    };
+  }
+
+  public async getPortfolioWithPositions(userId: string) {
     const portfolio = await this.getOrCreatePortfolioForUser(userId);
     return this.prisma.portfolio.findUnique({
       where: { id: portfolio.id },
@@ -168,6 +229,8 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
     return portfolio;
   }
 }
+
+
 
 
 

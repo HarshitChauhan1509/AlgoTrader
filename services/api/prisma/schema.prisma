@@ -290,15 +290,14 @@ model Trade {
   quantity    Int
   price       Decimal         @db.Decimal(18, 4)
   fees        Decimal         @default(0) @db.Decimal(18, 4)
+  realizedPnL Decimal?        @db.Decimal(18, 4)
   tradedAt    DateTime
   createdAt   DateTime        @default(now())
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   portfolio   Portfolio       @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
   order       Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
-  @@index([userId, tradedAt])
   @@index([portfolioId, tradedAt])
-  @@index([symbol, tradedAt])
 }
 
 model PortfolioSnapshot {
@@ -395,4 +394,5 @@ model AuditLog {
   @@index([userId, createdAt])
   @@index([correlationId])
 }
+
 

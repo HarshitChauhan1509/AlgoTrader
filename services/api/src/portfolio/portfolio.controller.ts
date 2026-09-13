@@ -10,9 +10,18 @@ export class PortfolioController {
   constructor(private readonly portfolioService: PortfolioService) {}
 
   @UseGuards(JwtAuthGuard)
+  @Get('metrics')
+  async getMetrics(@CurrentUser() user: { sub: string }) {
+    this.logger.log(`Fetching metrics for user ${user.sub}`);
+    return this.portfolioService.getPortfolioMetrics(user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getPortfolio(@CurrentUser() user: { sub: string }) {
     this.logger.log(`Fetching portfolio state for user ${user.sub}`);
     return this.portfolioService.getPortfolioWithPositions(user.sub);
   }
 }
+
+

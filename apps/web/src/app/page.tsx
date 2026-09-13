@@ -18,6 +18,7 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [portfolio, setPortfolio] = useState<any>(null);
+  const [metrics, setMetrics] = useState<any>(null);
 
   const fetchPortfolio = useCallback(async () => {
     try {
@@ -36,12 +37,19 @@ export default function Home() {
       }
       if (res.ok) {
         const data = await res.json();
-        setPortfolio(data);
+      setPortfolio(data);
+      
+      const resMetrics = await fetch('http://localhost:3001/api/portfolio/metrics', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (resMetrics.ok) {
+        setMetrics(await resMetrics.json());
+      }
       }
     } catch (e) {
       console.error('Failed to fetch portfolio', e);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     // Initial fetch
@@ -156,6 +164,32 @@ export default function Home() {
           </div>
         </div>
         </header>
+
+        {/* Metrics Banner */}
+        {metrics && (
+          <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg">
+              <p className="text-sm text-gray-400">Realized P&L</p>
+              <p className={`text-xl font-bold ${metrics.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                ${metrics.totalPnL >= 0 ? '+' : ''}${metrics.totalPnL.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg">
+              <p className="text-sm text-gray-400">Win Rate</p>
+              <p className="text-xl font-bold text-white">{metrics.winRate}%</p>
+            </div>
+            <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg">
+              <p className="text-sm text-gray-400">Total Trades</p>
+              <p className="text-xl font-bold text-white">{metrics.totalTrades}</p>
+            </div>
+            <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg">
+              <p className="text-sm text-gray-400">Best / Worst Trade</p>
+              <p className="text-xl font-bold text-white">
+                <span className="text-green-500">+${metrics.bestTrade.toFixed(2)}</span> / <span className="text-red-500">-${Math.abs(metrics.worstTrade).toFixed(2)}</span>
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Portfolio Banner */}
         {portfolio && (

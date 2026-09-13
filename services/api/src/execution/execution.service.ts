@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit, OnModuleDestroy, Inject } from '@nest
 import { RedisService } from '../redis/redis.service';
 import { BrokerAdapter, BROKER_ADAPTER_TOKEN } from './broker/broker.adapter';
 import { RiskService } from '../risk/risk.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { Order, OrderStatus, OrderType, Signal } from '@stock-platform/types';
 import * as crypto from 'crypto';
 
@@ -15,6 +16,7 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly redisService: RedisService,
     private readonly riskService: RiskService,
+    private readonly prisma: PrismaService,
     @Inject(BROKER_ADAPTER_TOKEN) private readonly brokerAdapter: BrokerAdapter
   ) {}
 
@@ -24,8 +26,9 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
     const client = this.redisService.getClient();
     const subClient = client.duplicate();
 
-    // Subscribe to strategy signals
+    // Subscribe to strategy signals and market data for SL/TP evaluation
     await subClient.subscribe('strategy:signals');
+    await subClient.psubscribe('market-data:candles:*:*');
 
     subClient.on('message', async (channel, message) => {
       if (channel === 'strategy:signals') {
@@ -39,7 +42,18 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
-    this.logger.log('Subscribed to strategy signals.');
+    subClient.on('pmessage', async (pattern, channel, message) => {
+      if (pattern === 'market-data:candles:*:*') {
+        try {
+          const candle = JSON.parse(message);
+          await this.monitorActivePositions(candle);
+        } catch (e) {
+          this.logger.error('Failed to monitor positions against candle', e);
+        }
+      }
+    });
+
+    this.logger.log('Subscribed to strategy signals and market data (for SL/TP).');
   }
 
   async onModuleDestroy() {
@@ -61,9 +75,12 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
       type: 'MARKET', // Defaulting to market orders for simple signals
       quantity: 1, 
       price: signal.price,
+      stopLossPrice: signal.stopLossPrice,
+      takeProfitPrice: signal.takeProfitPrice,
+      trailingDistance: signal.trailingDistance,
       status: 'PENDING',
       timestamp: new Date(),
-    };
+    } as any;
 
     const riskAssessment = await this.riskService.evaluateOrder(order);
 
@@ -75,56 +92,116 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-        this.orders.set(order.id, order);
+    this.orders.set(order.id, order);
     await this.publishOrderUpdate(order);
 
-    // Handoff to Broker Adapter
-    await this.executeOrder(order);
-  }
-
-  /**
-   * Simulates the broker's response confirming the trade execution.
-   */
-  private async executeOrder(order: Order) {
+    // Send to Broker Adapter
     try {
-      const response = await this.brokerAdapter.placeOrder(order);
-      
-      if (response.status === 'COMPLETE') {
-        order.status = 'EXECUTED';
-      } else {
-        order.status = 'FAILED';
-      }
-      
-      this.logger.log(`Order ${order.id} for ${order.symbol} ${order.status}`);
-      
-      this.orders.set(order.id, order);
-      await this.publishOrderUpdate(order);
-    } catch (e) {
-      this.logger.error(`Failed to execute order ${order.id}`, e);
+      const brokerResponse = await this.brokerAdapter.placeOrder(order);
+      order.brokerOrderId = brokerResponse.brokerOrderId;
+      order.status = brokerResponse.status;
+      order.price = (brokerResponse as any).averagePrice || order.price;
+      this.logger.log(`Order ${order.id} ${order.status} by broker. Avg Price: ${order.price}`);
+    } catch (e: any) {
+      this.logger.error(`Broker rejected order ${order.id}: ${e.message}`);
       order.status = 'FAILED';
-      this.orders.set(order.id, order);
-      await this.publishOrderUpdate(order);
     }
+
+    await this.publishOrderUpdate(order);
   }
 
   /**
-   * Broadcasts the order state back to Redis so the Risk/Portfolio engines can read it.
+   * Evaluates active positions for Stop Loss, Take Profit, and Trailing Stops.
    */
-  private async publishOrderUpdate(order: Order) {
-    try {
-      await this.redisService.publish('execution:orders', JSON.stringify(order));
-    } catch (e) {
-      this.logger.error(`Failed to publish order update for ${order.id}`, e);
+  private async monitorActivePositions(candle: any) {
+    const symbol = candle.symbol;
+    const currentPrice = candle.close; // Evaluate against close price of the tick/candle
+
+    // Fetch positions that have SL/TP parameters for this symbol
+    const positions = await this.prisma.position.findMany({
+      where: {
+        symbol: symbol,
+        OR: [
+          { stopLossPrice: { not: null } },
+          { takeProfitPrice: { not: null } },
+          { trailingDistance: { not: null } },
+        ]
+      }
+    });
+
+    for (const position of positions) {
+      let triggerSell = false;
+      let reason = '';
+
+      // 1. Update Trailing Stop Loss if applicable
+      if (position.trailingDistance) {
+        const trailingDist = Number(position.trailingDistance);
+        const highestPrice = Number(position.highestPriceReached || position.averagePrice);
+        
+        if (currentPrice > highestPrice) {
+          await this.prisma.position.update({
+            where: { id: position.id },
+            data: { highestPriceReached: currentPrice }
+          });
+          // Also update our local variable so evaluation below is correct
+          (position as any).highestPriceReached = currentPrice;
+        }
+
+        // TSL triggers if current price falls below (highest - trailingDist)
+        const currentHighest = Number((position as any).highestPriceReached);
+        if (currentPrice <= (currentHighest - trailingDist)) {
+          triggerSell = true;
+          reason = `Trailing Stop Hit (Highest: ${currentHighest}, Dist: ${trailingDist})`;
+        }
+      }
+
+      // 2. Check Static Stop Loss
+      if (!triggerSell && position.stopLossPrice) {
+        if (currentPrice <= Number(position.stopLossPrice)) {
+          triggerSell = true;
+          reason = `Stop Loss Hit (${position.stopLossPrice})`;
+        }
+      }
+
+      // 3. Check Take Profit
+      if (!triggerSell && position.takeProfitPrice) {
+        if (currentPrice >= Number(position.takeProfitPrice)) {
+          triggerSell = true;
+          reason = `Take Profit Hit (${position.takeProfitPrice})`;
+        }
+      }
+
+      // If triggered, execute a MARKET SELL order
+      if (triggerSell) {
+        this.logger.warn(`SL/TP TRIGGERED for position ${position.id}: ${reason}`);
+        
+        const order: Order = {
+          id: crypto.randomUUID(),
+          portfolioId: position.portfolioId,
+          symbol: position.symbol,
+          action: 'SELL',
+          type: 'MARKET',
+          quantity: position.quantity,
+          price: currentPrice,
+          status: 'PENDING',
+          timestamp: new Date(),
+        };
+
+        // Execute directly for the stub implementation
+        order.status = 'EXECUTED';
+        this.orders.set(order.id, order);
+
+        // Notify system of executed stop loss
+        setTimeout(async () => {
+          this.logger.log(`Bracket Order Executed: ${order.action} ${order.symbol} @ ${order.price}`);
+          await this.publishOrderUpdate(order);
+        }, 100);
+      }
     }
   }
 
-  // Helper method for potential unit testing
-  public getOrder(id: string): Order | undefined {
-    return this.orders.get(id);
+  private async publishOrderUpdate(order: Order) {
+    await this.redisService.publish('execution:orders', JSON.stringify(order));
   }
 }
-
-
-
-
 

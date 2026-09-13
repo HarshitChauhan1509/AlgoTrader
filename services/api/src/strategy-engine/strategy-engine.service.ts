@@ -69,18 +69,33 @@ export class StrategyEngineService implements OnModuleInit, OnModuleDestroy {
         this.logger.log(`💥 SIGNAL GENERATED: ${strategy.action} on ${candle.symbol} by ${strategy.name}`);
         
         // Publish signal to Redis so the Execution Engine (Phase 6) can pick it up
+        let stopLossPrice;
+        let takeProfitPrice;
+        if (strategy.stopLossDistance) {
+          stopLossPrice = strategy.action === 'BUY' ? candle.close - strategy.stopLossDistance : candle.close + strategy.stopLossDistance;
+        }
+        if (strategy.takeProfitDistance) {
+          takeProfitPrice = strategy.action === 'BUY' ? candle.close + strategy.takeProfitDistance : candle.close - strategy.takeProfitDistance;
+        }
+        const signalPayload = {
+          symbol: candle.symbol,
+          timeframe: candle.timeframe,
+          timestamp: candle.timestamp,
+          strategyId: strategy.id,
+          action: strategy.action,
+          price: candle.close,
+          stopLossPrice,
+          takeProfitPrice,
+          trailingDistance: strategy.trailingStopDistance,
+        };
         this.redisService.publish(
           'strategy:signals',
-          JSON.stringify({
-            symbol: candle.symbol,
-            timeframe: candle.timeframe,
-            timestamp: candle.timestamp,
-            strategyId: strategy.id,
-            action: strategy.action,
-            price: candle.close,
-          })
+          JSON.stringify(signalPayload)
         ).catch(err => this.logger.error('Failed to publish signal', err));
       }
     }
   }
 }
+
+
+

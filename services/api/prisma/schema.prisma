@@ -227,27 +227,26 @@ model Portfolio {
 }
 
 model Order {
-  id             String          @id @default(uuid()) @db.Uuid
-  userId         String          @db.Uuid
-  portfolioId    String?         @db.Uuid
-  signalId       String?         @db.Uuid
-  symbol         String
-  side           SignalDirection
-  quantity       Int
-  status         OrderStatus     @default(CREATED)
-  idempotencyKey String          @unique
-  brokerOrderId  String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  portfolio      Portfolio?      @relation(fields: [portfolioId], references: [id], onDelete: SetNull)
-  signal         Signal?         @relation(fields: [signalId], references: [id], onDelete: SetNull)
-  events         OrderEvent[]
-  trades         Trade[]
-
-  @@index([userId, createdAt])
-  @@index([portfolioId, createdAt])
-  @@index([symbol, status])
+  id               String          @id @default(uuid()) @db.Uuid
+  userId           String          @db.Uuid
+  portfolioId      String?         @db.Uuid
+  signalId         String?         @db.Uuid
+  symbol           String
+  side             SignalDirection
+  quantity         Int
+  status           OrderStatus     @default(CREATED)
+  idempotencyKey   String          @unique
+  brokerOrderId    String?
+  stopLossPrice    Decimal?        @db.Decimal(18, 4)
+  takeProfitPrice  Decimal?        @db.Decimal(18, 4)
+  trailingDistance Decimal?        @db.Decimal(18, 4)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolio        Portfolio?      @relation(fields: [portfolioId], references: [id], onDelete: SetNull)
+  signal           Signal?         @relation(fields: [signalId], references: [id], onDelete: SetNull)
+  events           OrderEvent[]
+  Trade            Trade[]
 }
 
 model OrderEvent {
@@ -263,16 +262,20 @@ model OrderEvent {
 }
 
 model Position {
-  id           String    @id @default(uuid()) @db.Uuid
-  userId       String    @db.Uuid
-  portfolioId  String    @db.Uuid
-  symbol       String
-  exchange     String    @default("NSE")
-  quantity     Int
-  averagePrice Decimal   @db.Decimal(18, 4)
-  updatedAt    DateTime  @updatedAt
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  portfolio    Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String    @db.Uuid
+  portfolioId         String    @db.Uuid
+  symbol              String
+  exchange            String    @default("NSE")
+  quantity            Int
+  averagePrice        Decimal   @db.Decimal(18, 4)
+  stopLossPrice       Decimal?  @db.Decimal(18, 4)
+  takeProfitPrice     Decimal?  @db.Decimal(18, 4)
+  trailingDistance    Decimal?  @db.Decimal(18, 4)
+  highestPriceReached Decimal?  @db.Decimal(18, 4)
+  updatedAt           DateTime  @updatedAt
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolio           Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
 
   @@unique([portfolioId, exchange, symbol])
 }
@@ -392,3 +395,4 @@ model AuditLog {
   @@index([userId, createdAt])
   @@index([correlationId])
 }
+

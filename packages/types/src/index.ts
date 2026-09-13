@@ -12,6 +12,9 @@ export interface Signal {
   strategyId: string;
   action: 'BUY' | 'SELL';
   price: number;
+  stopLossPrice?: number;
+  takeProfitPrice?: number;
+  trailingDistance?: number;
 }
 
 export type OrderStatus = 'PENDING' | 'EXECUTED' | 'FAILED' | 'CANCELLED' | 'REJECTED';
@@ -26,8 +29,15 @@ export interface Order {
   type: OrderType;
   quantity: number;
   price?: number;
-  status: OrderStatus;
+  stopLossPrice?: number;
+  takeProfitPrice?: number;
+  trailingDistance?: number;
+  brokerOrderId?: string;
+  status: OrderStatus | string;
   timestamp: Date;
 }
+
+
+
 
 

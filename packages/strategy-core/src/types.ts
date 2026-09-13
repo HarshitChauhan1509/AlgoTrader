@@ -28,6 +28,9 @@ export const StrategySchema = z.object({
   timeframe: z.string(), // e.g., '15m'
   conditions: z.array(StrategyConditionSchema).min(1),
   action: z.enum(['BUY', 'SELL']),
+  stopLossDistance: z.number().positive().optional(),
+  takeProfitDistance: z.number().positive().optional(),
+  trailingStopDistance: z.number().positive().optional(),
 });
 
 export type Strategy = z.infer<typeof StrategySchema>;
@@ -56,3 +59,4 @@ export interface EvaluationResult {
   action: 'BUY' | 'SELL';
   conditions: ConditionResult[];
 }
+

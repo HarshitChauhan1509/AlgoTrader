@@ -93,7 +93,10 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
                 // Only update average price on BUY. On SELL, avg price stays the same.
                 averagePrice: order.action === 'BUY' 
                   ? ((existingPosition.averagePrice * existingPosition.quantity) + tradeValue) / newQuantity
-                  : existingPosition.averagePrice
+                  : existingPosition.averagePrice,
+                stopLossPrice: order.stopLossPrice ?? existingPosition.stopLossPrice,
+                takeProfitPrice: order.takeProfitPrice ?? existingPosition.takeProfitPrice,
+                trailingDistance: order.trailingDistance ?? existingPosition.trailingDistance,
               },
             });
             this.logger.log(`Updated position for ${order.symbol}. New Qty: ${newQuantity}`);
@@ -107,6 +110,10 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
               symbol: order.symbol,
               quantity: order.quantity,
               averagePrice: order.price || 0,
+              stopLossPrice: order.stopLossPrice,
+              takeProfitPrice: order.takeProfitPrice,
+              trailingDistance: order.trailingDistance,
+              highestPriceReached: order.price || 0,
             },
           });
           this.logger.log(`Opened new position for ${order.symbol}`);
@@ -161,6 +168,7 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
     return portfolio;
   }
 }
+
 
 
 

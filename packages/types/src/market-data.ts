@@ -48,4 +48,7 @@ export interface MarketDataProvider {
     startDate: Date,
     endDate: Date
   ): Promise<Candle[]>;
+
+  subscribeOrderBook?(symbol: string, callback: (orderBook: any) => void): void;
+  unsubscribeOrderBook?(symbol: string): void;
 }

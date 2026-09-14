@@ -111,6 +111,40 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * Processes async webhooks from brokers (like Alpaca 'trade_updates')
+   */
+  public async processBrokerWebhook(brokerOrderId: string, eventType: string, price: number, qty: number) {
+    this.logger.log(`Processing Webhook for Broker Order ID: ${brokerOrderId}, Event: ${eventType}`);
+    
+    // Find internal order
+    let internalOrder: Order | undefined;
+    for (const [id, order] of this.orders.entries()) {
+      if (order.brokerOrderId === brokerOrderId) {
+        internalOrder = order;
+        break;
+      }
+    }
+
+    if (!internalOrder) {
+      this.logger.warn(`Received webhook for unknown broker order: ${brokerOrderId}`);
+      return;
+    }
+
+    // Map Alpaca event to internal status
+    if (eventType === 'fill' || eventType === 'partial_fill') {
+      internalOrder.status = 'EXECUTED';
+      internalOrder.price = price || internalOrder.price || 0;
+      
+      this.logger.log(`Webhook Confirmation: Order ${internalOrder.id} FILLED at ${internalOrder.price}`);
+      await this.publishOrderUpdate(internalOrder);
+    } else if (eventType === 'rejected' || eventType === 'canceled') {
+      internalOrder.status = 'REJECTED';
+      this.logger.warn(`Webhook Update: Order ${internalOrder.id} REJECTED/CANCELED`);
+      await this.publishOrderUpdate(internalOrder);
+    }
+  }
+
+  /**
    * Evaluates active positions for Stop Loss, Take Profit, and Trailing Stops.
    */
   private async monitorActivePositions(candle: any) {
@@ -204,4 +238,5 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
     await this.redisService.publish('execution:orders', JSON.stringify(order));
   }
 }
+
 

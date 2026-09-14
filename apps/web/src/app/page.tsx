@@ -38,6 +38,9 @@ export default function Home() {
       if (res.ok) {
         const data = await res.json();
       setPortfolio(data);
+      if (data && data.orders) {
+        setOrders(data.orders);
+      }
       
       const resMetrics = await fetch('http://localhost:3001/api/portfolio/metrics', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -273,6 +276,7 @@ export default function Home() {
     </main>
   );
 }
+
 
 
 

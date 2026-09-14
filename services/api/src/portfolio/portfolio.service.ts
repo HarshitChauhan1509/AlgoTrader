@@ -194,7 +194,7 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
     const portfolio = await this.getOrCreatePortfolioForUser(userId);
     return this.prisma.portfolio.findUnique({
       where: { id: portfolio.id },
-      include: { positions: true }
+      include: { positions: true, orders: { orderBy: { createdAt: 'desc' }, take: 20 } }
     });
   }
 
@@ -229,6 +229,7 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
     return portfolio;
   }
 }
+
 
 
 

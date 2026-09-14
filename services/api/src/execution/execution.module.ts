@@ -8,8 +8,11 @@ import { BROKER_ADAPTER_TOKEN } from './broker/broker.adapter';
 import { AlpacaAdapter } from './broker/alpaca.adapter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
+import { ExecutionController } from './execution.controller';
+
 @Module({
   imports: [RedisModule, RiskModule, PrismaModule, ConfigModule],
+  controllers: [ExecutionController],
   providers: [
     ExecutionService,
     {

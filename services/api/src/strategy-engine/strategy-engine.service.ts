@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { Strategy, StrategyEvaluator } from '@stock-platform/strategy-core';
 import { Candle, Timeframe } from '@stock-platform/types';
 import { RedisService } from '../redis/redis.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CandleBuffer } from './candle-buffer';
 import { LiveEvaluationContext } from './evaluation-context';
 
@@ -11,14 +12,18 @@ export class StrategyEngineService implements OnModuleInit, OnModuleDestroy {
   private readonly buffer = new CandleBuffer(200); // Keep last 200 candles
   private readonly evaluator = new StrategyEvaluator();
   
-  // In a real database, this would be loaded from PostgreSQL.
   private activeStrategies: Strategy[] = [];
 
-  constructor(private readonly redisService: RedisService) {}
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly prisma: PrismaService
+  ) {}
 
   async onModuleInit() {
     this.logger.log('Initializing Strategy Engine...');
     
+    await this.reloadActiveStrategies();
+
     // Subscribe to all market data channels (assuming standard naming convention)
     const client = this.redisService.getClient();
     
@@ -41,6 +46,25 @@ export class StrategyEngineService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('Subscribed to market data feeds.');
   }
 
+  async reloadActiveStrategies() {
+    const dbStrategies = await this.prisma.strategy.findMany({
+      where: { enabled: true }
+    });
+    
+    this.activeStrategies = dbStrategies.map(s => ({
+      id: s.id,
+      name: s.name,
+      timeframe: s.timeframe as Timeframe,
+      action: s.action as any,
+      conditions: (s.definition as any).conditions || [],
+      stopLossDistance: (s.definition as any).stopLossDistance,
+      takeProfitDistance: (s.definition as any).takeProfitDistance,
+      trailingStopDistance: (s.definition as any).trailingStopDistance,
+      symbol: (s.definition as any).symbol, // Dynamic property for engine filtering
+    }));
+    this.logger.log(`Reloaded ${this.activeStrategies.length} active strategies from database.`);
+  }
+
   async onModuleDestroy() {
     this.logger.log('Shutting down Strategy Engine...');
   }
@@ -54,7 +78,7 @@ export class StrategyEngineService implements OnModuleInit, OnModuleDestroy {
     this.buffer.addCandle(candle);
 
     const relevantStrategies = this.activeStrategies.filter(
-      (s) => s.timeframe === candle.timeframe
+      (s: any) => s.timeframe === candle.timeframe && (!s.symbol || s.symbol === candle.symbol)
     );
 
     if (relevantStrategies.length === 0) return;

@@ -10,4 +10,6 @@ export abstract class MarketDataProviderToken implements MarketDataProvider {
   abstract subscribeCandles(symbol: string, timeframe: Timeframe, callback: (candle: Candle) => void): void;
   abstract unsubscribeCandles(symbol: string, timeframe: Timeframe): void;
   abstract getHistoricalCandles(symbol: string, timeframe: Timeframe, startDate: Date, endDate: Date): Promise<Candle[]>;
+  abstract subscribeOrderBook?(symbol: string, callback: (orderBook: any) => void): void;
+  abstract unsubscribeOrderBook?(symbol: string): void;
 }

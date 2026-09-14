@@ -19,10 +19,11 @@ export default function Home() {
   const [orders, setOrders] = useState<any[]>([]);
   const [portfolio, setPortfolio] = useState<any>(null);
   const [metrics, setMetrics] = useState<any>(null);
+  const [orderBook, setOrderBook] = useState<any>(null);
 
   const fetchPortfolio = useCallback(async () => {
     try {
-            const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('accessToken');
       if (!token) {
         router.push('/login');
         return;
@@ -37,17 +38,17 @@ export default function Home() {
       }
       if (res.ok) {
         const data = await res.json();
-      setPortfolio(data);
-      if (data && data.orders) {
-        setOrders(data.orders);
-      }
-      
-      const resMetrics = await fetch('http://localhost:3001/api/portfolio/metrics', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (resMetrics.ok) {
-        setMetrics(await resMetrics.json());
-      }
+        setPortfolio(data);
+        if (data && data.orders) {
+          setOrders(data.orders);
+        }
+        
+        const resMetrics = await fetch('http://localhost:3001/api/portfolio/metrics', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (resMetrics.ok) {
+          setMetrics(await resMetrics.json());
+        }
       }
     } catch (e) {
       console.error('Failed to fetch portfolio', e);
@@ -55,7 +56,6 @@ export default function Home() {
   }, [router]);
 
   useEffect(() => {
-    // Initial fetch
     fetchPortfolio();
   }, [fetchPortfolio]);
 
@@ -124,6 +124,10 @@ export default function Home() {
       }
     });
 
+    socket.on('orderBookUpdate', (data: any) => {
+      setOrderBook(data);
+    });
+
     socket.on('orderUpdate', (order: any) => {
       setOrders(prev => {
         const existing = prev.findIndex(o => o.id === order.id);
@@ -135,9 +139,7 @@ export default function Home() {
         return [order, ...prev];
       });
 
-      // Refresh portfolio if an order was executed
       if (order.status === 'EXECUTED') {
-        // Small delay to ensure DB transaction committed before we fetch
         setTimeout(() => fetchPortfolio(), 500);
       }
     });
@@ -151,7 +153,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#121212] p-8 text-white">
       <div className="max-w-7xl mx-auto space-y-6">
-                <header className="flex justify-between items-center border-b border-gray-800 pb-4">
+        <header className="flex justify-between items-center border-b border-gray-800 pb-4">
           <div className="flex items-center space-x-6">
             <h1 className="text-2xl font-bold">AlgoTrader Dashboard</h1>
             <nav className="space-x-4">
@@ -159,16 +161,15 @@ export default function Home() {
               <a href="/backtest" className="text-gray-400 hover:text-white transition-colors">Backtest</a>
             </nav>
           </div>
-                    <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4">
             <button onClick={() => { localStorage.removeItem('accessToken'); router.push('/login'); }} className="text-sm text-gray-400 hover:text-white">Logout</button>
             <div className="flex items-center space-x-2">
-            <span className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
-            <span className="text-sm text-gray-400">{isConnected ? 'Connected to Market Data' : 'Disconnected'}</span>
+              <span className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              <span className="text-sm text-gray-400">{isConnected ? 'Connected' : 'Disconnected'}</span>
+            </div>
           </div>
-        </div>
         </header>
 
-        {/* Metrics Banner */}
         {metrics && (
           <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg">
@@ -194,7 +195,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Portfolio Banner */}
         {portfolio && (
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 flex justify-between items-center">
             <div>
@@ -223,6 +223,7 @@ export default function Home() {
           >
             <option value="RELIANCE">RELIANCE</option>
             <option value="TCS">TCS</option>
+            <option value="INFY">INFY</option>
             <option value="HDFCBANK">HDFCBANK</option>
           </select>
           
@@ -239,29 +240,55 @@ export default function Home() {
         </div>
 
         <div className="flex gap-6">
+          {/* Main Chart */}
           <div className="flex-grow">
-            <div 
-              ref={chartContainerRef} 
-              className="w-full h-[600px] border border-gray-800 rounded-lg overflow-hidden" 
-            />
+            <div ref={chartContainerRef} className="w-full h-[600px] border border-gray-800 rounded-lg overflow-hidden" />
           </div>
           
-          <div className="w-80 flex-shrink-0 bg-gray-900 border border-gray-800 rounded-lg p-4 h-[600px] flex flex-col">
-            <h2 className="text-xl font-bold mb-4 border-b border-gray-800 pb-2">Recent Orders</h2>
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+          {/* DOM / Order Book */}
+          <div className="w-64 flex-shrink-0 bg-gray-900 border border-gray-800 rounded-lg p-4 h-[600px] flex flex-col">
+            <h2 className="text-sm font-bold text-gray-400 mb-2 border-b border-gray-800 pb-2">Order Book (DOM)</h2>
+            <div className="flex-1 overflow-y-auto text-xs font-mono">
+              <div className="text-red-400 space-y-1 mb-2">
+                {orderBook?.asks?.slice().reverse().map((ask: any, idx: number) => (
+                  <div key={idx} className="flex justify-between hover:bg-gray-800 px-1">
+                    <span>{ask.price.toFixed(2)}</span>
+                    <span className="text-gray-300">{ask.quantity}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center py-1 bg-gray-800 font-bold border-y border-gray-700 my-2">
+                {orderBook ? orderBook.bids[0]?.price.toFixed(2) : '-'}
+              </div>
+              <div className="text-green-400 space-y-1 mt-2">
+                {orderBook?.bids?.map((bid: any, idx: number) => (
+                  <div key={idx} className="flex justify-between hover:bg-gray-800 px-1">
+                    <span>{bid.price.toFixed(2)}</span>
+                    <span className="text-gray-300">{bid.quantity}</span>
+                  </div>
+                ))}
+              </div>
+              {!orderBook && <p className="text-center text-gray-600 mt-10">Waiting for depth data...</p>}
+            </div>
+          </div>
+
+          {/* Recent Orders */}
+          <div className="w-64 flex-shrink-0 bg-gray-900 border border-gray-800 rounded-lg p-4 h-[600px] flex flex-col">
+            <h2 className="text-sm font-bold text-gray-400 mb-2 border-b border-gray-800 pb-2">Recent Orders</h2>
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
               {orders.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center mt-10">No orders yet</p>
+                <p className="text-gray-500 text-xs text-center mt-10">No orders yet</p>
               ) : (
                 orders.map((o) => (
-                  <div key={o.id} className="bg-gray-800 p-3 rounded text-sm border border-gray-700">
+                  <div key={o.id} className="bg-gray-800 p-2 rounded text-xs border border-gray-700">
                     <div className="flex justify-between items-center mb-1">
                       <span className={`font-bold ${o.action === 'BUY' ? 'text-green-400' : 'text-red-400'}`}>
                         {o.action} {o.symbol}
                       </span>
-                      <span className="text-gray-400">{o.quantity} qty</span>
+                      <span className="text-gray-400">{o.quantity} q</span>
                     </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className={`px-2 py-0.5 rounded ${o.status === 'EXECUTED' ? 'bg-green-900/50 text-green-400' : o.status === 'REJECTED' || o.status === 'FAILED' ? 'bg-red-900/50 text-red-400' : 'bg-yellow-900/50 text-yellow-400'}`}>
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className={`px-1.5 py-0.5 rounded ${o.status === 'EXECUTED' ? 'bg-green-900/50 text-green-400' : o.status === 'REJECTED' || o.status === 'FAILED' ? 'bg-red-900/50 text-red-400' : 'bg-yellow-900/50 text-yellow-400'}`}>
                         {o.status}
                       </span>
                       <span className="text-gray-500">{new Date(o.timestamp).toLocaleTimeString()}</span>
@@ -276,13 +303,3 @@ export default function Home() {
     </main>
   );
 }
-
-
-
-
-
-
-
-
-
-

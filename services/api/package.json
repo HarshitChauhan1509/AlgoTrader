@@ -6,9 +6,9 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"prisma/**/*.prisma\"",
     "lint": "eslint \"{src,test}/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:prod": "prisma migrate deploy && node dist/main",
+    "start": "node dist/services/api/src/main",
+    "start:dev": "npx ts-node-dev -r dotenv/config src/main.ts dotenv_config_path=../../.env",
+    "start:prod": "prisma migrate deploy && node dist/services/api/src/main",
     "test": "jest",
     "test:cov": "jest --coverage",
     "prisma:generate": "prisma generate",
@@ -56,9 +56,8 @@
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.5.4"
   }
 }
-
-

@@ -39,4 +39,19 @@ export class MarketDataService implements OnModuleInit, OnModuleDestroy {
   async getHistorical(symbol: string, timeframe: Timeframe, startDate: Date, endDate: Date): Promise<Candle[]> {
     return this.provider.getHistoricalCandles(symbol, timeframe, startDate, endDate);
   }
+
+  startStreamingOrderBook(symbol: string): void {
+    if (this.provider.subscribeOrderBook) {
+      this.provider.subscribeOrderBook(symbol, (orderBook: any) => {
+        const channel = `market-data:depth:${symbol}`;
+        this.redisService.publish(channel, JSON.stringify(orderBook)).catch(console.error);
+      });
+    }
+  }
+
+  stopStreamingOrderBook(symbol: string): void {
+    if (this.provider.unsubscribeOrderBook) {
+      this.provider.unsubscribeOrderBook(symbol);
+    }
+  }
 }

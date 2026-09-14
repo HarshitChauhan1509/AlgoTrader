@@ -59,6 +59,44 @@ export class MockMarketDataProvider implements MarketDataProviderToken {
     }
   }
 
+  subscribeOrderBook(symbol: string, callback: (orderBook: any) => void): void {
+    const key = `orderbook-${symbol}`;
+    if (this.intervals.has(key)) {
+      this.logger.warn(`Already subscribed to order book for ${symbol}`);
+      return;
+    }
+    this.logger.log(`Subscribed to mock order book for ${symbol}`);
+    const intervalId = setInterval(() => {
+      const base = this.basePrices.get(symbol) || 1000;
+      // Generate some dynamic bids and asks around the base price
+      const bids = Array.from({ length: 10 }).map((_, i) => ({
+        price: parseFloat((base - (i + 1) * 0.5).toFixed(2)),
+        quantity: Math.floor(Math.random() * 500) + 10
+      }));
+      const asks = Array.from({ length: 10 }).map((_, i) => ({
+        price: parseFloat((base + (i + 1) * 0.5).toFixed(2)),
+        quantity: Math.floor(Math.random() * 500) + 10
+      }));
+      callback({
+        symbol,
+        timestamp: new Date(),
+        bids,
+        asks
+      });
+    }, 1000); // 1 update per second
+    this.intervals.set(key, intervalId);
+  }
+
+  unsubscribeOrderBook(symbol: string): void {
+    const key = `orderbook-${symbol}`;
+    const interval = this.intervals.get(key);
+    if (interval) {
+      clearInterval(interval);
+      this.intervals.delete(key);
+      this.logger.log(`Unsubscribed from mock order book for ${symbol}`);
+    }
+  }
+
   async getHistoricalCandles(symbol: string, timeframe: Timeframe, startDate: Date, endDate: Date): Promise<Candle[]> {
     this.logger.log(`Generating mock historical data for ${symbol} from ${startDate.toISOString()} to ${endDate.toISOString()}`);
     

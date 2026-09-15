@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy, Inject } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
-import { BrokerAdapter, BROKER_ADAPTER_TOKEN } from './broker/broker.adapter';
+import { BrokerAdapterFactory } from './broker/broker-adapter.factory';
 import { RiskService } from '../risk/risk.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { Order, OrderStatus, OrderType, Signal } from '@stock-platform/types';
@@ -17,7 +17,7 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
     private readonly redisService: RedisService,
     private readonly riskService: RiskService,
     private readonly prisma: PrismaService,
-    @Inject(BROKER_ADAPTER_TOKEN) private readonly brokerAdapter: BrokerAdapter
+    private readonly brokerFactory: BrokerAdapterFactory
   ) {}
 
   async onModuleInit() {
@@ -69,6 +69,7 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
     // Create an Order object (Hardcoding quantity to 1 for this phase)
     const order: Order = {
       id: crypto.randomUUID(),
+      userId: signal.userId,
       strategyId: signal.strategyId,
       symbol: signal.symbol,
       action: signal.action,
@@ -97,7 +98,8 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
 
     // Send to Broker Adapter
     try {
-      const brokerResponse = await this.brokerAdapter.placeOrder(order);
+      const adapter = await this.brokerFactory.getAdapterForUser(order.userId, 'alpaca');
+      const brokerResponse = await adapter.placeOrder(order);
       order.brokerOrderId = brokerResponse.brokerOrderId;
       order.status = brokerResponse.status;
       order.price = (brokerResponse as any).averagePrice || order.price;
@@ -211,6 +213,7 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
         
         const order: Order = {
           id: crypto.randomUUID(),
+          userId: position.userId,
           portfolioId: position.portfolioId,
           symbol: position.symbol,
           action: 'SELL',
@@ -219,7 +222,7 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
           price: currentPrice,
           status: 'PENDING',
           timestamp: new Date(),
-        };
+        } as any;
 
         // Execute directly for the stub implementation
         order.status = 'EXECUTED';

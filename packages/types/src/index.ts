@@ -6,6 +6,8 @@ export * from './market-data';
 import { Timeframe } from './market-data';
 
 export interface Signal {
+  id?: string;
+  userId: string;
   symbol: string;
   timeframe: Timeframe;
   timestamp: Date;
@@ -22,6 +24,7 @@ export type OrderType = 'MARKET' | 'LIMIT';
 
 export interface Order {
   id: string;
+  userId: string;
   strategyId?: string;
   portfolioId?: string;
   symbol: string;

@@ -10,11 +10,11 @@ export class AlpacaAdapter implements BrokerAdapter {
   private readonly apiKey: string;
   private readonly apiSecret: string;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(private readonly configService: ConfigService, credentials?: any) {
     const isPaper = this.configService.get<string>('ALPACA_PAPER', 'true') === 'true';
     this.baseUrl = isPaper ? 'https://paper-api.alpaca.markets' : 'https://api.alpaca.markets';
-    this.apiKey = this.configService.get<string>('ALPACA_API_KEY', '');
-    this.apiSecret = this.configService.get<string>('ALPACA_API_SECRET', '');
+    this.apiKey = credentials?.apiKey || this.configService.get<string>('ALPACA_API_KEY', '');
+    this.apiSecret = credentials?.apiSecret || this.configService.get<string>('ALPACA_API_SECRET', '');
     
     if (!this.apiKey || !this.apiSecret) {
       this.logger.warn('Alpaca API credentials missing. Orders will fail if ALPACA is selected.');

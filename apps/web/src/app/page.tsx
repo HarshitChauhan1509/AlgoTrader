@@ -20,6 +20,8 @@ export default function Home() {
   const [portfolio, setPortfolio] = useState<any>(null);
   const [metrics, setMetrics] = useState<any>(null);
   const [orderBook, setOrderBook] = useState<any>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const fetchPortfolio = useCallback(async () => {
     try {
@@ -55,6 +57,16 @@ export default function Home() {
     }
   }, [router]);
 
+  
+    const fetchNotifications = useCallback(async () => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        const res = await fetch('http://localhost:3001/api/notifications', { headers: { 'Authorization': `Bearer ${token}` }});
+        if (res.ok) setNotifications(await res.json());
+      }
+    }, []);
+    useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+  
   useEffect(() => {
     fetchPortfolio();
   }, [fetchPortfolio]);
@@ -91,7 +103,15 @@ export default function Home() {
       };
       window.addEventListener('resize', handleResize);
 
-      return () => {
+      const unreadCount = notifications.filter(n => n.status === 'UNREAD').length;
+
+    const markAllAsRead = async () => {
+      const token = localStorage.getItem('accessToken');
+      await fetch('http://localhost:3001/api/notifications/read-all', { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` }});
+      setNotifications(prev => prev.map(n => ({...n, status: 'READ'})));
+    };
+  
+  return () => {
         window.removeEventListener('resize', handleResize);
         chart.remove();
       };
@@ -124,6 +144,11 @@ export default function Home() {
       }
     });
 
+    
+    socket.on('notification', (data: any) => {
+      setNotifications(prev => [data, ...prev]);
+    });
+  
     socket.on('orderBookUpdate', (data: any) => {
       setOrderBook(data);
     });
@@ -163,6 +188,39 @@ export default function Home() {
             </nav>
           </div>
           <div className="flex items-center space-x-4">
+            
+            <div className="relative">
+              <button onClick={() => setShowNotifications(!showNotifications)} className="text-gray-400 hover:text-white relative">
+                🔔
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                  <div className="flex justify-between items-center p-3 border-b border-gray-800 bg-gray-800">
+                    <h3 className="font-bold text-sm">Notifications</h3>
+                    {unreadCount > 0 && <button onClick={markAllAsRead} className="text-xs text-blue-400 hover:text-blue-300">Mark all read</button>}
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <p className="text-gray-500 text-sm text-center p-4">No notifications</p>
+                    ) : (
+                      notifications.map(n => (
+                        <div key={n.id} className={`p-3 border-b border-gray-800 text-sm ${n.status === 'UNREAD' ? 'bg-gray-800/50' : ''}`}>
+                          <p className="font-bold text-gray-300">{n.title}</p>
+                          <p className="text-gray-500 text-xs mt-1">{n.body}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
             <button onClick={() => { localStorage.removeItem('accessToken'); router.push('/login'); }} className="text-sm text-gray-400 hover:text-white">Logout</button>
             <div className="flex items-center space-x-2">
               <span className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>

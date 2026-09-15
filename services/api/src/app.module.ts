@@ -12,6 +12,7 @@ import { RiskModule } from './risk/risk.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { BacktestModule } from './backtest/backtest.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -30,15 +31,9 @@ import { BacktestModule } from './backtest/backtest.module';
     GatewayModule,
     PortfolioModule,
     BacktestModule,
+    NotificationModule,
     HealthModule,
     AuthModule,
   ],
 })
 export class AppModule {}
-
-
-
-
-
-
-

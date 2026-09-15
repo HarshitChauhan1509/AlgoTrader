@@ -38,6 +38,7 @@ export class MarketDataGateway
     await this.subscriberClient.psubscribe('market-data:candles:*:*');
     await this.subscriberClient.psubscribe('market-data:depth:*');
     await this.subscriberClient.subscribe('execution:orders');
+    await this.subscriberClient.subscribe('notifications:broadcast');
 
     // Listen for market data events from Redis and broadcast to active WS rooms
     this.subscriberClient.on('pmessage', (pattern: string, channel: string, message: string) => {
@@ -72,6 +73,13 @@ export class MarketDataGateway
           this.server.emit('orderUpdate', order);
         } catch (e) {
           this.logger.error(`Error parsing order from redis: ${message}`, e);
+        }
+      } else if (channel === 'notifications:broadcast') {
+        try {
+          const notification = JSON.parse(message);
+          this.server.emit('notification', notification);
+        } catch (e) {
+          this.logger.error(`Error parsing notification from redis: ${message}`, e);
         }
       }
     });

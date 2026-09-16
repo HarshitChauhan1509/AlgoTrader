@@ -18,7 +18,8 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const res = await fetch(`http://localhost:3001/api/auth/`, {
+      const endpoint = isRegister ? "register" : "login";
+      const res = await fetch(`http://localhost:3001/api/auth/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

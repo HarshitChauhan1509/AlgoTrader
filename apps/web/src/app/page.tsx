@@ -23,6 +23,32 @@ export default function Home() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
+  
+  const handleClosePosition = async (pos: any) => {
+    if (!confirm(`Close position for ${pos.symbol}?`)) return;
+    const token = localStorage.getItem('accessToken');
+    const action = pos.quantity > 0 ? 'SELL' : 'BUY';
+    const res = await fetch('http://localhost:3001/api/execution/close-position', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol: pos.symbol, quantity: Math.abs(pos.quantity), action })
+    });
+    if (res.ok) alert('Close order sent');
+  };
+
+  
+  const [orderQty, setOrderQty] = useState(1);
+  const handleManualOrder = async (action: 'BUY' | 'SELL') => {
+    const token = localStorage.getItem('accessToken');
+    const price = action === 'BUY' ? orderBook?.asks?.[0]?.price : orderBook?.bids?.[0]?.price;
+    const res = await fetch('http://localhost:3001/api/execution/manual-order', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol, action, quantity: orderQty, price: price || 0 })
+    });
+    if (res.ok) alert('Order placed');
+  };
+
   const fetchPortfolio = useCallback(async () => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -262,10 +288,15 @@ export default function Home() {
             </div>
             <div className="flex space-x-4">
               {portfolio.positions?.map((pos: any) => (
-                <div key={pos.id} className="bg-gray-800 px-4 py-2 rounded border border-gray-700 text-sm">
-                  <p className="font-bold text-gray-200">{pos.symbol}</p>
-                  <p className="text-gray-400">{pos.quantity} Qty @ ₹{pos.averagePrice}</p>
+                
+                <div key={pos.id} className="bg-gray-800 px-4 py-2 rounded border border-gray-700 text-sm flex justify-between items-center gap-4">
+                  <div>
+                    <p className="font-bold text-gray-200">{pos.symbol}</p>
+                    <p className="text-gray-400">{pos.quantity} Qty @ ₹{pos.averagePrice}</p>
+                  </div>
+                  <button onClick={() => handleClosePosition(pos)} className="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded">Close</button>
                 </div>
+
               ))}
               {portfolio.positions?.length === 0 && (
                 <div className="text-gray-500 text-sm py-2">No active positions</div>
@@ -328,6 +359,29 @@ export default function Home() {
                 ))}
               </div>
               {!orderBook && <p className="text-center text-gray-600 mt-10">Waiting for depth data...</p>}
+            </div>
+          </div>
+
+          
+          {/* Manual Order Entry */}
+          <div className="w-64 flex-shrink-0 bg-gray-900 border border-gray-800 rounded-lg p-4 h-[600px] flex flex-col">
+            <h2 className="text-sm font-bold text-gray-400 mb-2 border-b border-gray-800 pb-2">Manual Order</h2>
+            <div className="space-y-4 mt-2">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Symbol</label>
+                <div className="bg-gray-800 px-3 py-2 rounded text-sm font-bold border border-gray-700">{symbol}</div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Quantity</label>
+                <input type="number" min="1" value={orderQty} onChange={e => setOrderQty(Number(e.target.value))} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm" />
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <button onClick={() => handleManualOrder('BUY')} className="bg-green-600 hover:bg-green-700 text-white py-2 rounded font-bold text-sm">BUY</button>
+                <button onClick={() => handleManualOrder('SELL')} className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-bold text-sm">SELL</button>
+              </div>
+              <div className="text-xs text-gray-500 mt-4 text-center">
+                Uses market price if DOM is available
+              </div>
             </div>
           </div>
 

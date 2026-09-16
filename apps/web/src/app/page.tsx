@@ -209,7 +209,8 @@ export default function Home() {
             <h1 className="text-2xl font-bold">AlgoTrader Dashboard</h1>
             <nav className="space-x-4">
               <a href="/" className="text-white font-semibold">Live Trading</a>
-              <a href="/strategy-builder" className="text-gray-400 hover:text-white transition-colors">Strategy Builder</a>
+              <a href="/strategies" className="text-gray-400 hover:text-white transition-colors">Strategies</a>
+              <a href="/strategy-builder" className="text-gray-400 hover:text-white transition-colors">Builder</a>
               <a href="/backtest" className="text-gray-400 hover:text-white transition-colors">Backtest</a>
             </nav>
           </div>

@@ -63,6 +63,12 @@ export class ExecutionService implements OnModuleInit, OnModuleDestroy {
   /**
    * Processes a new trading signal, formats a broker order, and simulates execution.
    */
+  
+  public async publishManualSignal(signal: Signal) {
+    this.logger.log(`Publishing manual signal for ${signal.symbol}`);
+    await this.redisService.publish('strategy:signals', JSON.stringify(signal));
+  }
+
   private async handleSignal(signal: Signal) {
     this.logger.log(`Received signal to ${signal.action} ${signal.symbol} at ${signal.price}`);
 

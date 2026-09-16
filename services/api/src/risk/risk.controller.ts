@@ -1,5 +1,6 @@
 import { Controller, Get, Put, Body, UseGuards, Req } from '@nestjs/common';
 import { RiskService } from './risk.service';
+import { AuditService, AuditAction } from '../audit/audit.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -9,6 +10,7 @@ export class RiskController {
   constructor(
     private readonly riskService: RiskService,
     private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
   ) {}
 
   @Get()
@@ -28,7 +30,8 @@ export class RiskController {
 
   @Put()
   async updateRiskConfig(@Req() req: any, @Body() body: any) {
-    return this.prisma.riskConfiguration.update({
+    
+    const result = await this.prisma.riskConfiguration.update({
       where: { userId: req.user.userId },
       data: {
         tradingMode: body.tradingMode,
@@ -39,5 +42,9 @@ export class RiskController {
         maxOpenPositions: body.maxOpenPositions,
       }
     });
+
+    await this.audit.logEvent(req.user.userId, AuditAction.RISK_CONFIG_UPDATED, { changes: body });
+    return result;
+
   }
 }

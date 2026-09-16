@@ -23,6 +23,14 @@ export default function Home() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
+  const unreadCount = notifications.filter(n => n.status === 'UNREAD').length;
+
+  const markAllAsRead = async () => {
+    const token = localStorage.getItem('accessToken');
+    await fetch('http://localhost:3001/api/notifications/read-all', { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` }});
+    setNotifications(prev => prev.map(n => ({...n, status: 'READ'})));
+  };
+
   
   const handleClosePosition = async (pos: any) => {
     if (!confirm(`Close position for ${pos.symbol}?`)) return;
@@ -129,13 +137,7 @@ export default function Home() {
       };
       window.addEventListener('resize', handleResize);
 
-      const unreadCount = notifications.filter(n => n.status === 'UNREAD').length;
 
-    const markAllAsRead = async () => {
-      const token = localStorage.getItem('accessToken');
-      await fetch('http://localhost:3001/api/notifications/read-all', { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` }});
-      setNotifications(prev => prev.map(n => ({...n, status: 'READ'})));
-    };
   
   return () => {
         window.removeEventListener('resize', handleResize);

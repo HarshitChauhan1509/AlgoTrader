@@ -80,16 +80,16 @@ export default function MyStrategies() {
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {strategies.map(strat => (
-              <div key={strat.id} className={`bg-gray-900 border \${strat.enabled ? 'border-green-500/50' : 'border-gray-800'} rounded-lg p-6 flex justify-between items-center`}>
+              <div key={strat.id} className={`bg-gray-900 border ${strat.enabled ? 'border-green-500/50' : 'border-gray-800'} rounded-lg p-6 flex justify-between items-center`}>
                 <div>
                   <div className="flex items-center space-x-3 mb-2">
                     <h3 className="text-xl font-bold">{strat.name}</h3>
-                    <span className={\`px-2 py-0.5 text-xs rounded font-bold \${strat.enabled ? 'bg-green-900/50 text-green-400' : 'bg-gray-800 text-gray-400'}\`}>
+                    <span className={`px-2 py-0.5 text-xs rounded font-bold ${strat.enabled ? 'bg-green-900/50 text-green-400' : 'bg-gray-800 text-gray-400'}`}>
                       {strat.enabled ? 'ACTIVE' : 'PAUSED'}
                     </span>
                   </div>
                   <p className="text-sm text-gray-400">
-                    <strong className={\`\${strat.action === 'BUY' ? 'text-green-400' : 'text-red-400'}\`}>{strat.action}</strong> {strat.symbol} on {strat.timeframe} timeframe
+                    <strong className={`${strat.action === 'BUY' ? 'text-green-400' : 'text-red-400'}`}>{strat.action}</strong> {strat.symbol} on {strat.timeframe} timeframe
                   </p>
                   <div className="text-xs text-gray-500 mt-2">
                     Created: {new Date(strat.createdAt).toLocaleDateString()}
@@ -99,11 +99,11 @@ export default function MyStrategies() {
                 <div className="flex flex-col space-y-2">
                   <button 
                     onClick={() => handleToggle(strat.id, strat.enabled)}
-                    className={\`px-4 py-2 rounded font-bold text-sm transition-colors \${
+                    className={`px-4 py-2 rounded font-bold text-sm transition-colors ${
                       strat.enabled 
                         ? 'bg-red-900/30 text-red-500 hover:bg-red-900/50 border border-red-900/50' 
                         : 'bg-green-900/30 text-green-500 hover:bg-green-900/50 border border-green-900/50'
-                    }\`}
+                    }`}
                   >
                     {strat.enabled ? 'Pause Execution' : 'Activate & Run'}
                   </button>

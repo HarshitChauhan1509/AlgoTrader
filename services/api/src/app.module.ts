@@ -1,3 +1,4 @@
+import { AuditModule } from './audit/audit.module';
 import { BrokerModule } from './broker/broker.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -34,6 +35,7 @@ import { NotificationModule } from './notification/notification.module';
     BacktestModule,
     NotificationModule,
     BrokerModule,
+    AuditModule,
     HealthModule,
     AuthModule,
   ],

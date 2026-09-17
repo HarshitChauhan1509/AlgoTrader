@@ -22,6 +22,33 @@ export class PortfolioService implements OnModuleInit, OnModuleDestroy {
       if (channel === 'execution:orders') {
         try {
           const order: Order = JSON.parse(message);
+          
+          // Upsert order in Prisma
+          try {
+            await this.prisma.order.upsert({
+              where: { idempotencyKey: order.id },
+              update: {
+                status: order.status as any,
+                brokerOrderId: order.brokerOrderId || null,
+              },
+              create: {
+                id: order.id,
+                userId: order.userId,
+                symbol: order.symbol,
+                side: order.action as any,
+                quantity: order.quantity,
+                status: order.status as any,
+                idempotencyKey: order.id,
+                brokerOrderId: order.brokerOrderId || null,
+                stopLossPrice: order.stopLossPrice || null,
+                takeProfitPrice: order.takeProfitPrice || null,
+                trailingDistance: order.trailingDistance || null,
+              }
+            });
+          } catch (e) {
+            this.logger.error('Failed to sync order to DB', e);
+          }
+
           if (order.status === 'EXECUTED') {
             await this.handleExecutedOrder(order);
           }

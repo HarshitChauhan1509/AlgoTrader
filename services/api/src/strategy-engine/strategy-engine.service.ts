@@ -53,6 +53,7 @@ export class StrategyEngineService implements OnModuleInit, OnModuleDestroy {
     
     this.activeStrategies = dbStrategies.map(s => ({
       id: s.id,
+      userId: s.userId,
       name: s.name,
       timeframe: s.timeframe as Timeframe,
       action: s.action as any,
@@ -106,6 +107,7 @@ export class StrategyEngineService implements OnModuleInit, OnModuleDestroy {
           timeframe: candle.timeframe,
           timestamp: candle.timestamp,
           strategyId: strategy.id,
+          userId: (strategy as any).userId,
           action: strategy.action,
           price: candle.close,
           stopLossPrice,

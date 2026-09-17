@@ -204,9 +204,9 @@ export default function Home() {
   }, [symbol, timeframe, fetchPortfolio]);
 
   return (
-    <main className="min-h-screen bg-[#121212] p-8 text-white">
+    <main className="min-h-screen bg-transparent p-8 text-white">
       <div className="max-w-7xl mx-auto space-y-6">
-        <header className="flex justify-between items-center border-b border-gray-800 pb-4">
+        <header className="flex justify-between items-center border-b border-white/[0.08] pb-4">
           <div className="flex items-center space-x-6">
             <h1 className="text-2xl font-bold">AlgoTrader Dashboard</h1>
             <nav className="space-x-4">
@@ -229,8 +229,8 @@ export default function Home() {
               </button>
               
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
-                  <div className="flex justify-between items-center p-3 border-b border-gray-800 bg-gray-800">
+                <div className="absolute right-0 mt-2 w-80 bg-white/[0.02] border border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden">
+                  <div className="flex justify-between items-center p-3 border-b border-white/[0.08] bg-gray-800">
                     <h3 className="font-bold text-sm">Notifications</h3>
                     {unreadCount > 0 && <button onClick={markAllAsRead} className="text-xs text-blue-400 hover:text-blue-300">Mark all read</button>}
                   </div>
@@ -239,7 +239,7 @@ export default function Home() {
                       <p className="text-gray-500 text-sm text-center p-4">No notifications</p>
                     ) : (
                       notifications.map(n => (
-                        <div key={n.id} className={`p-3 border-b border-gray-800 text-sm ${n.status === 'UNREAD' ? 'bg-gray-800/50' : ''}`}>
+                        <div key={n.id} className={`p-3 border-b border-white/[0.08] text-sm ${n.status === 'UNREAD' ? 'bg-gray-800/50' : ''}`}>
                           <p className="font-bold text-gray-300">{n.title}</p>
                           <p className="text-gray-500 text-xs mt-1">{n.body}</p>
                         </div>
@@ -260,21 +260,21 @@ export default function Home() {
 
         {metrics && (
           <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg">
+            <div className="glass-panel p-4 rounded-2xl">
               <p className="text-sm text-gray-400">Realized P&L</p>
               <p className={`text-xl font-bold ${metrics.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 ${metrics.totalPnL >= 0 ? '+' : ''}${metrics.totalPnL.toFixed(2)}
               </p>
             </div>
-            <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg">
+            <div className="glass-panel p-4 rounded-2xl">
               <p className="text-sm text-gray-400">Win Rate</p>
               <p className="text-xl font-bold text-white">{metrics.winRate}%</p>
             </div>
-            <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg">
+            <div className="glass-panel p-4 rounded-2xl">
               <p className="text-sm text-gray-400">Total Trades</p>
               <p className="text-xl font-bold text-white">{metrics.totalTrades}</p>
             </div>
-            <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg">
+            <div className="glass-panel p-4 rounded-2xl">
               <p className="text-sm text-gray-400">Best / Worst Trade</p>
               <p className="text-xl font-bold text-white">
                 <span className="text-green-500">+${metrics.bestTrade.toFixed(2)}</span> / <span className="text-red-500">-${Math.abs(metrics.worstTrade).toFixed(2)}</span>
@@ -284,7 +284,7 @@ export default function Home() {
         )}
 
         {portfolio && (
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 flex justify-between items-center">
+          <div className="glass-panel rounded-2xl p-4 flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-400">Available Margin</p>
               <p className="text-2xl font-bold text-green-400">₹{portfolio.currentBalance.toLocaleString()}</p>
@@ -292,7 +292,7 @@ export default function Home() {
             <div className="flex space-x-4">
               {portfolio.positions?.map((pos: any) => (
                 
-                <div key={pos.id} className="bg-gray-800 px-4 py-2 rounded border border-gray-700 text-sm flex justify-between items-center gap-4">
+                <div key={pos.id} className="bg-gray-800 px-4 py-2 rounded-xl border border-gray-700 text-sm flex justify-between items-center gap-4">
                   <div>
                     <p className="font-bold text-gray-200">{pos.symbol}</p>
                     <p className="text-gray-400">{pos.quantity} Qty @ ₹{pos.averagePrice}</p>
@@ -312,7 +312,7 @@ export default function Home() {
           <select 
             value={symbol} 
             onChange={(e) => setSymbol(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="RELIANCE">RELIANCE</option>
             <option value="TCS">TCS</option>
@@ -323,7 +323,7 @@ export default function Home() {
           <select 
             value={timeframe} 
             onChange={(e) => setTimeframe(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="1m">1m</option>
             <option value="5m">5m</option>
@@ -335,12 +335,12 @@ export default function Home() {
         <div className="flex gap-6">
           {/* Main Chart */}
           <div className="flex-grow">
-            <div ref={chartContainerRef} className="w-full h-[600px] border border-gray-800 rounded-lg overflow-hidden" />
+            <div ref={chartContainerRef} className="w-full h-[600px] border border-gray-800 rounded-2xl overflow-hidden" />
           </div>
           
           {/* DOM / Order Book */}
-          <div className="w-64 flex-shrink-0 bg-gray-900 border border-gray-800 rounded-lg p-4 h-[600px] flex flex-col">
-            <h2 className="text-sm font-bold text-gray-400 mb-2 border-b border-gray-800 pb-2">Order Book (DOM)</h2>
+          <div className="w-64 flex-shrink-0 glass-panel rounded-2xl p-4 h-[600px] flex flex-col">
+            <h2 className="text-sm font-bold text-gray-400 mb-2 border-b border-white/[0.08] pb-2">Order Book (DOM)</h2>
             <div className="flex-1 overflow-y-auto text-xs font-mono">
               <div className="text-red-400 space-y-1 mb-2">
                 {orderBook?.asks?.slice().reverse().map((ask: any, idx: number) => (
@@ -367,20 +367,20 @@ export default function Home() {
 
           
           {/* Manual Order Entry */}
-          <div className="w-64 flex-shrink-0 bg-gray-900 border border-gray-800 rounded-lg p-4 h-[600px] flex flex-col">
-            <h2 className="text-sm font-bold text-gray-400 mb-2 border-b border-gray-800 pb-2">Manual Order</h2>
+          <div className="w-64 flex-shrink-0 glass-panel rounded-2xl p-4 h-[600px] flex flex-col">
+            <h2 className="text-sm font-bold text-gray-400 mb-2 border-b border-white/[0.08] pb-2">Manual Order</h2>
             <div className="space-y-4 mt-2">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Symbol</label>
-                <div className="bg-gray-800 px-3 py-2 rounded text-sm font-bold border border-gray-700">{symbol}</div>
+                <div className="bg-gray-800 px-3 py-2 rounded-xl text-sm font-bold border border-gray-700">{symbol}</div>
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Quantity</label>
-                <input type="number" min="1" value={orderQty} onChange={e => setOrderQty(Number(e.target.value))} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm" />
+                <input type="number" min="1" value={orderQty} onChange={e => setOrderQty(Number(e.target.value))} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm" />
               </div>
               <div className="grid grid-cols-2 gap-2 pt-2">
-                <button onClick={() => handleManualOrder('BUY')} className="bg-green-600 hover:bg-green-700 text-white py-2 rounded font-bold text-sm">BUY</button>
-                <button onClick={() => handleManualOrder('SELL')} className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-bold text-sm">SELL</button>
+                <button onClick={() => handleManualOrder('BUY')} className="bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl font-bold text-sm">BUY</button>
+                <button onClick={() => handleManualOrder('SELL')} className="bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl font-bold text-sm">SELL</button>
               </div>
               <div className="text-xs text-gray-500 mt-4 text-center">
                 Uses market price if DOM is available
@@ -389,14 +389,14 @@ export default function Home() {
           </div>
 
           {/* Recent Orders */}
-          <div className="w-64 flex-shrink-0 bg-gray-900 border border-gray-800 rounded-lg p-4 h-[600px] flex flex-col">
-            <h2 className="text-sm font-bold text-gray-400 mb-2 border-b border-gray-800 pb-2">Recent Orders</h2>
+          <div className="w-64 flex-shrink-0 glass-panel rounded-2xl p-4 h-[600px] flex flex-col">
+            <h2 className="text-sm font-bold text-gray-400 mb-2 border-b border-white/[0.08] pb-2">Recent Orders</h2>
             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
               {orders.length === 0 ? (
                 <p className="text-gray-500 text-xs text-center mt-10">No orders yet</p>
               ) : (
                 orders.map((o) => (
-                  <div key={o.id} className="bg-gray-800 p-2 rounded text-xs border border-gray-700">
+                  <div key={o.id} className="bg-gray-800 p-2 rounded-xl text-xs border border-gray-700">
                     <div className="flex justify-between items-center mb-1">
                       <span className={`font-bold ${o.action === 'BUY' ? 'text-green-400' : 'text-red-400'}`}>
                         {o.action} {o.symbol}
@@ -404,7 +404,7 @@ export default function Home() {
                       <span className="text-gray-400">{o.quantity} q</span>
                     </div>
                     <div className="flex justify-between items-center text-[10px]">
-                      <span className={`px-1.5 py-0.5 rounded ${o.status === 'EXECUTED' ? 'bg-green-900/50 text-green-400' : o.status === 'REJECTED' || o.status === 'FAILED' ? 'bg-red-900/50 text-red-400' : 'bg-yellow-900/50 text-yellow-400'}`}>
+                      <span className={`px-1.5 py-0.5 rounded-xl ${o.status === 'EXECUTED' ? 'bg-green-900/50 text-green-400' : o.status === 'REJECTED' || o.status === 'FAILED' ? 'bg-red-900/50 text-red-400' : 'bg-yellow-900/50 text-yellow-400'}`}>
                         {o.status}
                       </span>
                       <span className="text-gray-500">{new Date(o.timestamp).toLocaleTimeString()}</span>

@@ -2,7 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #121212;
-  color: #ffffff;
+@layer base {
+  :root {
+    --background: 0 0% 4%; /* Near black */
+    --foreground: 0 0% 98%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 210 100% 50%; /* Vibrant blue */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 210 100% 50%;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary;
+    background-color: hsl(var(--background));
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.04) 0%, transparent 25%);
+    background-attachment: fixed;
+  }
+}
+
+.glass-panel {
+  @apply bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.5)];
 }

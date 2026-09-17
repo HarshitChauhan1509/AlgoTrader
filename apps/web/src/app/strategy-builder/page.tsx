@@ -108,9 +108,9 @@ export default function StrategyBuilder() {
   };
 
   return (
-    <main className="min-h-screen bg-[#121212] p-8 text-white">
+    <main className="min-h-screen bg-transparent p-8 text-white">
       <div className="max-w-4xl mx-auto space-y-6">
-        <header className="flex justify-between items-center border-b border-gray-800 pb-4">
+        <header className="flex justify-between items-center border-b border-white/[0.08] pb-4">
           <div className="flex items-center space-x-6">
             <h1 className="text-2xl font-bold">Strategy Builder</h1>
             <nav className="space-x-4">
@@ -119,15 +119,15 @@ export default function StrategyBuilder() {
           </div>
         </header>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-6">
+        <div className="glass-panel rounded-2xl p-6 space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-400 mb-1">Strategy Name</label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2" placeholder="e.g. SMA Crossover" />
+              <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2" placeholder="e.g. SMA Crossover" />
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1">Symbol</label>
-              <select value={symbol} onChange={e => setSymbol(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2">
+              <select value={symbol} onChange={e => setSymbol(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2">
                 <option value="RELIANCE">RELIANCE</option>
                 <option value="TCS">TCS</option>
                 <option value="INFY">INFY</option>
@@ -136,7 +136,7 @@ export default function StrategyBuilder() {
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1">Timeframe</label>
-              <select value={timeframe} onChange={e => setTimeframe(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2">
+              <select value={timeframe} onChange={e => setTimeframe(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2">
                 <option value="1m">1m</option>
                 <option value="5m">5m</option>
                 <option value="15m">15m</option>
@@ -145,7 +145,7 @@ export default function StrategyBuilder() {
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1">Action</label>
-              <select value={action} onChange={e => setAction(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2">
+              <select value={action} onChange={e => setAction(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2">
                 <option value="BUY">BUY</option>
                 <option value="SELL">SELL</option>
               </select>
@@ -156,18 +156,18 @@ export default function StrategyBuilder() {
             <h3 className="text-lg font-semibold mb-4">Entry Conditions</h3>
             <div className="space-y-4">
               {conditions.map((cond, idx) => (
-                <div key={idx} className="flex items-center gap-3 bg-gray-800 p-4 rounded border border-gray-700">
+                <div key={idx} className="flex items-center gap-3 bg-gray-800 p-4 rounded-xl border border-gray-700">
                   <div className="flex-1 flex gap-2">
-                    <select value={cond.leftIndicator} onChange={e => updateCondition(idx, 'leftIndicator', e.target.value)} className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm">
+                    <select value={cond.leftIndicator} onChange={e => updateCondition(idx, 'leftIndicator', e.target.value)} className="bg-white/[0.02] border border-gray-700 rounded-xl px-2 py-1 text-sm">
                       <option value="PRICE">PRICE</option>
                       <option value="SMA">SMA</option>
                       <option value="EMA">EMA</option>
                       <option value="RSI">RSI</option>
                     </select>
-                    <input type="text" placeholder="Period (e.g. 14)" value={cond.leftParams} onChange={e => updateCondition(idx, 'leftParams', e.target.value)} className="w-24 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm" />
+                    <input type="text" placeholder="Period (e.g. 14)" value={cond.leftParams} onChange={e => updateCondition(idx, 'leftParams', e.target.value)} className="w-24 bg-white/[0.02] border border-gray-700 rounded-xl px-2 py-1 text-sm" />
                   </div>
                   
-                  <select value={cond.operator} onChange={e => updateCondition(idx, 'operator', e.target.value)} className="bg-blue-900/50 text-blue-300 border border-blue-800 rounded px-2 py-1 text-sm font-bold">
+                  <select value={cond.operator} onChange={e => updateCondition(idx, 'operator', e.target.value)} className="bg-blue-900/50 text-blue-300 border border-blue-800 rounded-xl px-2 py-1 text-sm font-bold">
                     <option value=">">&gt;</option>
                     <option value="<">&lt;</option>
                     <option value=">=">&gt;=</option>
@@ -178,19 +178,19 @@ export default function StrategyBuilder() {
                   </select>
 
                   <div className="flex-1 flex gap-2 justify-end">
-                    <select value={cond.rightType} onChange={e => updateCondition(idx, 'rightType', e.target.value)} className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm">
+                    <select value={cond.rightType} onChange={e => updateCondition(idx, 'rightType', e.target.value)} className="bg-white/[0.02] border border-gray-700 rounded-xl px-2 py-1 text-sm">
                       <option value="INDICATOR">Indicator</option>
                       <option value="NUMBER">Number</option>
                     </select>
                     {cond.rightType === 'INDICATOR' && (
-                      <select value={cond.rightIndicator} onChange={e => updateCondition(idx, 'rightIndicator', e.target.value)} className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm">
+                      <select value={cond.rightIndicator} onChange={e => updateCondition(idx, 'rightIndicator', e.target.value)} className="bg-white/[0.02] border border-gray-700 rounded-xl px-2 py-1 text-sm">
                         <option value="PRICE">PRICE</option>
                         <option value="SMA">SMA</option>
                         <option value="EMA">EMA</option>
                         <option value="RSI">RSI</option>
                       </select>
                     )}
-                    <input type="text" placeholder={cond.rightType === 'INDICATOR' ? 'Period (e.g. 14)' : 'Value'} value={cond.rightParams} onChange={e => updateCondition(idx, 'rightParams', e.target.value)} className="w-24 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm" />
+                    <input type="text" placeholder={cond.rightType === 'INDICATOR' ? 'Period (e.g. 14)' : 'Value'} value={cond.rightParams} onChange={e => updateCondition(idx, 'rightParams', e.target.value)} className="w-24 bg-white/[0.02] border border-gray-700 rounded-xl px-2 py-1 text-sm" />
                   </div>
 
                   <button onClick={() => removeCondition(idx)} className="text-red-500 hover:text-red-400 font-bold ml-2">X</button>
@@ -205,15 +205,15 @@ export default function StrategyBuilder() {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Stop Loss Distance (₹)</label>
-                <input type="number" value={stopLoss} onChange={e => setStopLoss(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2" placeholder="e.g. 10" />
+                <input type="number" value={stopLoss} onChange={e => setStopLoss(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2" placeholder="e.g. 10" />
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Take Profit Distance (₹)</label>
-                <input type="number" value={takeProfit} onChange={e => setTakeProfit(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2" placeholder="e.g. 20" />
+                <input type="number" value={takeProfit} onChange={e => setTakeProfit(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2" placeholder="e.g. 20" />
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Trailing Stop Distance (₹)</label>
-                <input type="number" value={trailingStop} onChange={e => setTrailingStop(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2" placeholder="Optional" />
+                <input type="number" value={trailingStop} onChange={e => setTrailingStop(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2" placeholder="Optional" />
               </div>
             </div>
           </div>

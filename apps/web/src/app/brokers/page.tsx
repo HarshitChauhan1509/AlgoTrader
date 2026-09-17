@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities, @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -82,9 +83,9 @@ export default function BrokerConnections() {
   };
 
   return (
-    <main className="min-h-screen bg-[#121212] p-8 text-white">
+    <main className="min-h-screen bg-transparent p-8 text-white">
       <div className="max-w-4xl mx-auto space-y-6">
-        <header className="flex justify-between items-center border-b border-gray-800 pb-4">
+        <header className="flex justify-between items-center border-b border-white/[0.08] pb-4">
           <div className="flex items-center space-x-6">
             <h1 className="text-2xl font-bold">Broker Connections</h1>
             <nav className="space-x-4">
@@ -93,7 +94,7 @@ export default function BrokerConnections() {
           </div>
           <button 
             onClick={() => setShowModal(true)} 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold"
+            className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 transition-all shadow-sm text-white px-4 py-2 rounded-xl font-bold"
           >
             + Connect Broker
           </button>
@@ -101,12 +102,12 @@ export default function BrokerConnections() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {accounts.length === 0 ? (
-            <div className="col-span-2 text-center py-12 bg-gray-900 border border-gray-800 rounded-lg text-gray-500">
+            <div className="col-span-2 text-center py-12 glass-panel rounded-2xl text-gray-500">
               No brokers connected. Click 'Connect Broker' to link your trading account.
             </div>
           ) : (
             accounts.map(acc => (
-              <div key={acc.id} className="bg-gray-900 border border-gray-800 rounded-lg p-6 relative">
+              <div key={acc.id} className="glass-panel rounded-2xl p-6 relative">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-xl font-bold">{acc.displayName}</h3>
@@ -126,35 +127,35 @@ export default function BrokerConnections() {
 
         {/* Modal */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-            <div className="bg-gray-900 border border-gray-700 p-6 rounded-lg w-[400px]">
-              <h2 className="text-xl font-bold mb-4 border-b border-gray-800 pb-2">Link Broker Account</h2>
+          <div className="fixed inset-0 bg-transparent/70 flex items-center justify-center z-50">
+            <div className="bg-white/[0.02] border border-gray-700 p-6 rounded-2xl w-[400px]">
+              <h2 className="text-xl font-bold mb-4 border-b border-white/[0.08] pb-2">Link Broker Account</h2>
               
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Broker</label>
-                  <select value={broker} onChange={e => setBroker(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2">
+                  <select value={broker} onChange={e => setBroker(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2">
                     <option value="alpaca">Alpaca Markets</option>
                     <option value="zerodha">Zerodha Kite (Coming Soon)</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Display Name</label>
-                  <input type="text" placeholder="e.g. Alpaca Paper Trading" value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2" />
+                  <input type="text" placeholder="e.g. Alpaca Paper Trading" value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2" />
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">API Key</label>
-                  <input type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2" />
+                  <input type="text" value={apiKey} onChange={e => setApiKey(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2" />
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">API Secret</label>
-                  <input type="password" value={apiSecret} onChange={e => setApiSecret(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2" />
+                  <input type="password" value={apiSecret} onChange={e => setApiSecret(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2" />
                 </div>
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
                 <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
-                <button onClick={handleSave} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold disabled:opacity-50">
+                <button onClick={handleSave} disabled={loading} className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 transition-all shadow-sm text-white px-4 py-2 rounded-xl font-bold disabled:opacity-50">
                   {loading ? 'Saving...' : 'Connect'}
                 </button>
               </div>

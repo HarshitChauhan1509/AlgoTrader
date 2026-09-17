@@ -82,13 +82,13 @@ export default function RiskManagement() {
   };
 
   if (fetching) {
-    return <div className="min-h-screen bg-[#121212] flex items-center justify-center text-white">Loading...</div>;
+    return <div className="min-h-screen bg-transparent flex items-center justify-center text-white">Loading...</div>;
   }
 
   return (
-    <main className="min-h-screen bg-[#121212] p-8 text-white">
+    <main className="min-h-screen bg-transparent p-8 text-white">
       <div className="max-w-4xl mx-auto space-y-6">
-        <header className="flex justify-between items-center border-b border-gray-800 pb-4">
+        <header className="flex justify-between items-center border-b border-white/[0.08] pb-4">
           <div className="flex items-center space-x-6">
             <h1 className="text-2xl font-bold">Global Risk Management</h1>
             <nav className="space-x-4">
@@ -97,10 +97,10 @@ export default function RiskManagement() {
           </div>
         </header>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-8">
+        <div className="glass-panel rounded-2xl p-6 space-y-8">
           
           <section>
-            <h2 className="text-xl font-bold mb-4 border-b border-gray-800 pb-2 text-blue-400">Trading Mode</h2>
+            <h2 className="text-xl font-bold mb-4 border-b border-white/[0.08] pb-2 text-blue-400">Trading Mode</h2>
             <div className="space-y-4">
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input type="radio" value="SIGNAL_ONLY" checked={tradingMode === 'SIGNAL_ONLY'} onChange={(e) => setTradingMode(e.target.value)} className="w-5 h-5 text-blue-600" />
@@ -129,7 +129,7 @@ export default function RiskManagement() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold mb-4 border-b border-gray-800 pb-2 text-yellow-400">Global Limits</h2>
+            <h2 className="text-xl font-bold mb-4 border-b border-white/[0.08] pb-2 text-yellow-400">Global Limits</h2>
             
             <div className="grid grid-cols-2 gap-6">
               <div>
@@ -138,7 +138,7 @@ export default function RiskManagement() {
                   type="number" 
                   value={maxDailyLoss} 
                   onChange={e => setMaxDailyLoss(Number(e.target.value))} 
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2" 
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2" 
                 />
                 <p className="text-xs text-gray-500 mt-1">Halt all strategies if daily loss exceeds this amount.</p>
               </div>
@@ -149,7 +149,7 @@ export default function RiskManagement() {
                   type="number" 
                   value={maxCapitalPerTrade} 
                   onChange={e => setMaxCapitalPerTrade(Number(e.target.value))} 
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2" 
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2" 
                 />
                 <p className="text-xs text-gray-500 mt-1">Absolute maximum position size per trade.</p>
               </div>
@@ -160,7 +160,7 @@ export default function RiskManagement() {
                   type="number" 
                   value={maxOpenPositions} 
                   onChange={e => setMaxOpenPositions(Number(e.target.value))} 
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2" 
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2" 
                 />
                 <p className="text-xs text-gray-500 mt-1">Prevent new entries if you have this many active trades.</p>
               </div>
@@ -171,7 +171,7 @@ export default function RiskManagement() {
                   type="number" 
                   value={maxTradesPerDay} 
                   onChange={e => setMaxTradesPerDay(Number(e.target.value))} 
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2" 
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2" 
                 />
                 <p className="text-xs text-gray-500 mt-1">Total limit on order volume to prevent overtrading.</p>
               </div>
@@ -183,7 +183,7 @@ export default function RiskManagement() {
                   step="0.1"
                   value={riskPerTradePercent} 
                   onChange={e => setRiskPerTradePercent(Number(e.target.value))} 
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2" 
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2" 
                 />
                 <p className="text-xs text-gray-500 mt-1">Suggested risk limit for dynamic position sizing.</p>
               </div>
@@ -194,7 +194,7 @@ export default function RiskManagement() {
             <button 
               onClick={handleSave} 
               disabled={loading} 
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded font-bold disabled:opacity-50 transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 transition-colors"
             >
               {loading ? 'Saving...' : 'Save Configuration'}
             </button>
